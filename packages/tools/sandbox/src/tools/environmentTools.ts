@@ -10,9 +10,14 @@ import { EngineStore } from "core/Engines/engineStore";
 
 export class EnvironmentTools {
     public static SkyboxPath = "";
-    public static Skyboxes = ["https://assets.babylonjs.com/environments/environmentSpecular.env", "https://assets.babylonjs.com/environments/studio.env"];
+    public static Skyboxes = [
+        "https://assets.babylonjs.com/environments/environmentSpecular.env",
+        "https://assets.babylonjs.com/environments/studio.env",
+        "https://playground.babylonjs.com/textures/country.env",
+        "https://playground.babylonjs.com/textures/Runyon_Canyon_A_2k_cube_specular.env",
+    ];
 
-    public static SkyboxesNames = ["Default", "Studio"];
+    public static SkyboxesNames = ["Default", "Studio", "Country", "Sunset"];
 
     public static LoadSkyboxPathTexture(scene: Scene) {
         const defaultSkyboxIndex = Math.max(0, LocalStorageHelper.ReadLocalStorageValue("defaultSkyboxId", 0));

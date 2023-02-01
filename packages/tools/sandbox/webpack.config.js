@@ -7,6 +7,11 @@ module.exports = (env) => {
         mode: production ? "production" : "development",
         entry: "./src/legacy/legacy.ts",
         devtool: production ? "source-map" : "eval-cheap-module-source-map",
+        performance: {
+            hints: false,
+            maxEntrypointSize: 512000,
+            maxAssetSize: 512000
+        },
         output: {
             path: path.resolve(__dirname, "dist"),
             filename: "babylon.sandbox.js",

@@ -110,7 +110,8 @@ export class Footer extends React.Component<IFooterProps> {
         return (
             <div id="footer" className={"footer" + (hasCameras || hasVariants ? " long" : hasCameras && hasVariants ? " longer" : "")}>
                 <div className="footerLeft">
-                    <img id="logoImg" src={babylonIdentity} />
+                    {babylonIdentity} = {babylonIdentity}
+                    <img id="logoImg" src={"https://babylonpress.org/wp-content/uploads/2020/12/logo-babylonpress-GB-s.png"} />
                 </div>
                 <AnimationBar globalState={this.props.globalState} enabled={!!this.props.globalState.currentScene} />
                 <div className={"footerRight"}>
