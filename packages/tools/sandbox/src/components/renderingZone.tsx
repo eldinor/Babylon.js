@@ -30,6 +30,7 @@ import * as CamerakitPlugin from "@tweakpane/plugin-camerakit";
 import { Mesh } from "core/Meshes";
 import { CubeTexture } from "core/Materials/Textures/cubeTexture";
 import { CreateScreenshotAsync } from "core/Misc/screenshotTools";
+import { Color4 } from "core/Maths/math.color";
 
 function isTextureAsset(name: string): boolean {
     const queryStringIndex = name.indexOf("?");
@@ -92,6 +93,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 preserveDrawingBuffer: true,
                 antialias: antialias,
                 forceSRGBBufferSupportState: this.props.globalState.commerceMode,
+                stencil: true,
             });
         }
 
@@ -294,7 +296,9 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         console.log("onSceneLoaded", filename);
 
-        const pane = new Pane();
+        const pane = new Pane({
+            container: document.getElementById("paneContainer") as any,
+        });
         pane.registerPlugin(CamerakitPlugin);
         console.log(pane);
 
@@ -394,8 +398,13 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
                 CreateScreenshotAsync(this._engine, this._scene.activeCamera as ArcRotateCamera, { width: this._canvas.width, height: this._canvas.height }, "image/png").then(
                     (data) => {
+                        if (document.getElementById("screenshotImage")) {
+                            document.getElementById("screenshotImage")?.remove();
+                        }
+
                         let image = new Image();
-                        image.src = data;
+                        (image as any).src = data;
+                        image.id = "screenshotImage";
 
                         document.body.appendChild(image);
 
@@ -414,22 +423,71 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                         saveButton.style.top = "0px";
                         saveButton.style.left = "0px";
                         saveButton.style.zIndex = "15000";
-                        saveButton.href = image.src;
+                        saveButton.href = (image as any).src;
 
-                        saveButton.style.background = "#1498d7"
-                        saveButton.style.color = "white"
-                        saveButton.style.textDecoration = "none"
-                        saveButton.style.display = "block"
-                        saveButton.style.padding = "4px"
+                        saveButton.style.background = "#1e1d78";
+                        saveButton.style.color = "white";
+                        saveButton.style.textDecoration = "none";
+                        saveButton.style.display = "block";
+                        saveButton.style.padding = "5px";
+                        saveButton.style.paddingTop = "2px";
 
                         let rnd: number = Math.floor(Math.random() * 1000);
                         saveButton.download = "MockUp_" + rnd + ".png";
-
-                        //
                     }
+                    //
                 );
             });
-        }
+
+            const disableSkyboxButton = pane.addButton({
+                title: "Disable Skybox",
+                label: "No Sky", // optional
+            });
+            disableSkyboxButton.on("click", () => {
+                skybox.isEnabled() ? skybox.setEnabled(false) : skybox.setEnabled(true);
+                if (disableSkyboxButton.title === "Disable Skybox") disableSkyboxButton.title = "Enable Skybox";
+                else disableSkyboxButton.title = "Disable Skybox";
+            });
+
+            const transparentBG = pane.addButton({
+                title: "Transparent BG",
+                label: "BG Transparent", // optional
+            });
+
+            transparentBG.on("click", () => {
+                console.log(this._scene.clearColor);
+
+                //   this._scene.clearColor = new Color4 (0.2,0.2,0.9,1)
+
+                if (this._scene.clearColor.a == 0) {
+                    this._scene.clearColor = new Color4(0.2, 0.2, 0.2, 1);
+                } else {
+                    this._scene.clearColor = new Color4(1, 1, 1, 0);
+                }
+
+                //      transparentBG.title === "Transparent BG" ? (transparentBG.title = "Color BG") : transparentBG.title === "Transparent BG";
+
+                if (transparentBG.title === "Transparent BG") transparentBG.title = "Non-transparent BG";
+                else transparentBG.title = "Transparent BG";
+            });
+
+            const PARAMS = {
+                primary: "#f05",
+                background: { r: 255, g: 0, b: 55 },
+                ClearColor: { r: this._scene.clearColor.r, g: this._scene.clearColor.g, b: this._scene.clearColor.b, a: this._scene.clearColor.a },
+            };
+
+            const chooseClearColor = pane.addInput(PARAMS, "ClearColor");
+
+            chooseClearColor.on("change", (ev) => {
+                console.log(`change: ${ev.value}`);
+                console.log(ev.value.r, ev.value.g, ev.value.b, ev.value.a);
+
+                this._scene.clearColor = new Color4(ev.value.r / 255, ev.value.g / 255, 1 / ev.value.b / 255, ev.value.a);
+            });
+
+            //
+        } // skybox
 
         if (this.props.globalState.isDebugLayerEnabled) {
             this.props.globalState.showDebugLayer();
