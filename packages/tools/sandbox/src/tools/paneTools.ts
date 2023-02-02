@@ -403,7 +403,7 @@ export function ppFolder(pane: Pane, scene: Scene) {
             label: "Lens Size",
             min: 0,
             max: 200,
-            step: 5,
+            step: 1,
             wide: true,
         }
     );
