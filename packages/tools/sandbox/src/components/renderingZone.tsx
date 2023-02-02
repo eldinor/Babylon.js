@@ -7,7 +7,7 @@ import { SceneLoader } from "core/Loading/sceneLoader";
 import { GLTFFileLoader } from "loaders/glTF/glTFFileLoader";
 import { Scene } from "core/scene";
 import type { Vector3 } from "core/Maths/math.vector";
-import type { ArcRotateCamera } from "core/Cameras/arcRotateCamera";
+import { ArcRotateCamera } from "core/Cameras/arcRotateCamera";
 import type { FramingBehavior } from "core/Behaviors/Cameras/framingBehavior";
 import { EnvironmentTools } from "../tools/environmentTools";
 import { Tools } from "core/Misc/tools";
@@ -21,6 +21,9 @@ import "../scss/renderingZone.scss";
 import { PBRBaseMaterial } from "core/Materials/PBR/pbrBaseMaterial";
 import { Texture } from "core/Materials/Textures/texture";
 import { PBRMaterial } from "core/Materials/PBR/pbrMaterial";
+
+import { mainPane, createPaneElements1, skyPaneElements, screenshotPane, screenshotButton, cameraPane, ppFolder } from "../tools/paneTools";
+import { DefaultRenderingPipeline } from "core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline";
 
 function isTextureAsset(name: string): boolean {
     const queryStringIndex = name.indexOf("?");
@@ -276,13 +279,74 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         this.prepareCamera();
         this.prepareLighting();
+        this.createPipeline();
         this.handleErrors();
 
+        const pane = mainPane(this._scene);
+
+        this._scene.onDisposeObservable.addOnce(() => {
+            console.log("DISPOSE")
+            pane.dispose();
+        });
+
+        // getting pane children info
+        //console.log((pane.children[0].controller_ as any).props.valMap_.label);
+
+        createPaneElements1(pane, this._scene, filename);
+
+        // autoRotateButton
+
+        //
+        // skyRotateButton
+
+        const skybox = this._scene.getMeshByName("hdrSkyBox");
+
+        if (skybox) {
+            //
+            if (skybox.material instanceof PBRMaterial) {
+                skyPaneElements(pane, this._scene, skybox.material);
+                //
+            }
+        } //
+        //
+        // Camera folder
+
+        //  cameraPane()
+
+        // Screenshot Button
+
+        cameraPane(pane, this._scene);
+
+        const scrshotPane = screenshotPane();
+
+        this._scene.onDisposeObservable.addOnce(() => {
+            console.log("DISPOSE scrshotPane")
+            scrshotPane.dispose();
+        });
+
+        screenshotButton(scrshotPane, this._scene, this._engine, this._canvas);
+
+        ppFolder(pane, this._scene)
+
+        // #################################
+        //
         if (this.props.globalState.isDebugLayerEnabled) {
             this.props.globalState.showDebugLayer();
         }
 
         delete this._currentPluginName;
+    }
+
+    createPipeline() {
+        const pipeline = new DefaultRenderingPipeline(
+            "pipeline", // The name of the pipeline
+            true, // Do you want the pipeline to use HDR texture?
+            this._scene, // The scene instance
+            [this._scene.activeCamera as ArcRotateCamera] // The list of cameras to be attached to
+        );
+        pipeline.samples = 4;
+
+        return pipeline;
     }
 
     loadTextureAsset(url: string): Scene {
