@@ -7,7 +7,7 @@ import { SceneLoader } from "core/Loading/sceneLoader";
 import { GLTFFileLoader } from "loaders/glTF/glTFFileLoader";
 import { Scene } from "core/scene";
 import type { Vector3 } from "core/Maths/math.vector";
-import type { ArcRotateCamera } from "core/Cameras/arcRotateCamera";
+import { ArcRotateCamera } from "core/Cameras/arcRotateCamera";
 import type { FramingBehavior } from "core/Behaviors/Cameras/framingBehavior";
 import { EnvironmentTools } from "../tools/environmentTools";
 import { Tools } from "core/Misc/tools";
@@ -21,6 +21,11 @@ import "../scss/renderingZone.scss";
 import { PBRBaseMaterial } from "core/Materials/PBR/pbrBaseMaterial";
 import { Texture } from "core/Materials/Textures/texture";
 import { PBRMaterial } from "core/Materials/PBR/pbrMaterial";
+
+import { CreateScreenshotAsync } from "core/Misc/screenshotTools";
+import { runCoroutineAsync } from "core/Misc/coroutine";
+
+
 
 function isTextureAsset(name: string): boolean {
     const queryStringIndex = name.indexOf("?");
@@ -277,7 +282,68 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         this.prepareCamera();
         this.prepareLighting();
         this.handleErrors();
+        // #####################################################################################
 
+        const screenshotCamera = this._scene.activeCamera?.clone("screenshotCamera");
+        console.log(screenshotCamera);
+        if (screenshotCamera instanceof ArcRotateCamera) {
+            this._scene.activeCameras?.push(screenshotCamera as ArcRotateCamera);
+            this._scene.activeCamera = screenshotCamera as ArcRotateCamera;
+            //
+            // Positions
+
+            function makeAlphaSeries(screenshotCamera: ArcRotateCamera, scene: Scene, engine: Engine, canvas: HTMLCanvasElement, alphaAdd: number) {
+                (screenshotCamera as ArcRotateCamera).alpha = Tools.ToDegrees((screenshotCamera as ArcRotateCamera).alpha + alphaAdd);
+                CreateScreenshotAsync(engine, screenshotCamera as ArcRotateCamera, { width: canvas.width, height: canvas.height }, "image/png").then(
+                    (data: any) => {
+    
+
+                        let image = new Image();
+                        (image as any).src = data;
+                        image.id = "screenshotImage" + alphaAdd;
+
+                        document.getElementById("screenSeries")!.appendChild(image);
+
+                        image.style.position = "relative";
+                        image.style.top = "1px";
+                        image.style.left = "1px";
+                        image.style.width = canvas.width / 10 + "px";
+                        image.style.height = canvas.height / 10 + "px";
+
+   
+                    }
+                    //
+                );
+            } // makeAlphaSeries END
+            
+
+
+            const spawnMeshesCoroutine = function* (camera: ArcRotateCamera, scene: Scene, engine: Engine, canvas: HTMLCanvasElement) {
+                document.getElementById("screenSeries")!.innerHTML = ""
+                makeAlphaSeries(camera, scene , engine , canvas , camera.alpha );
+                yield;
+                makeAlphaSeries(camera, scene , engine , canvas , camera.alpha+ Tools.ToRadians(90) );
+                yield;
+                makeAlphaSeries(camera, scene , engine , canvas , camera.alpha + Tools.ToRadians(90) );
+                yield;
+                makeAlphaSeries(camera, scene , engine , canvas , camera.alpha + Tools.ToRadians(90) );
+                yield;
+
+                
+                console.log(scene.activeCameras)
+                console.log(scene.cameras)
+                scene.activeCameras = []
+                console.log(scene.activeCameras)
+                scene.activeCameras.push(scene.cameras[0])
+                
+              };
+              (this._scene.onBeforeRenderObservable as any).runCoroutineAsync(spawnMeshesCoroutine(screenshotCamera, this._scene, this._engine, this._canvas));
+              console.log(runCoroutineAsync)
+
+        } // instance of Arc
+        //
+
+        // #####################################################################################
         if (this.props.globalState.isDebugLayerEnabled) {
             this.props.globalState.showDebugLayer();
         }
