@@ -7,7 +7,7 @@ import { SceneLoader } from "core/Loading/sceneLoader";
 import { GLTFFileLoader } from "loaders/glTF/glTFFileLoader";
 import { Scene } from "core/scene";
 import type { Vector3 } from "core/Maths/math.vector";
-import { ArcRotateCamera } from "core/Cameras/arcRotateCamera";
+import type { ArcRotateCamera } from "core/Cameras/arcRotateCamera";
 import type { FramingBehavior } from "core/Behaviors/Cameras/framingBehavior";
 import { EnvironmentTools } from "../tools/environmentTools";
 import { Tools } from "core/Misc/tools";
@@ -22,23 +22,10 @@ import { PBRBaseMaterial } from "core/Materials/PBR/pbrBaseMaterial";
 import { Texture } from "core/Materials/Textures/texture";
 import { PBRMaterial } from "core/Materials/PBR/pbrMaterial";
 
-import { Pane } from "tweakpane";
-// import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
-
-import * as CamerakitPlugin from "@tweakpane/plugin-camerakit";
-
-import { Mesh } from "core/Meshes";
-import { CubeTexture } from "core/Materials/Textures/cubeTexture";
-import { CreateScreenshotAsync } from "core/Misc/screenshotTools";
-import { Color4 } from "core/Maths/math.color";
-
 function isTextureAsset(name: string): boolean {
     const queryStringIndex = name.indexOf("?");
-    //   console.log(name, queryStringIndex)
-    console.log("name ", name);
     if (queryStringIndex !== -1) {
         name = name.substring(0, queryStringIndex);
-        console.log("name? ", name);
     }
 
     return name.endsWith(".ktx") || name.endsWith(".ktx2") || name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg");
@@ -93,7 +80,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 preserveDrawingBuffer: true,
                 antialias: antialias,
                 forceSRGBBufferSupportState: this.props.globalState.commerceMode,
-                stencil: true,
             });
         }
 
@@ -205,8 +191,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             framingBehavior.framingTime = 0;
             framingBehavior.elevationReturnTime = -1;
 
-            console.log(this);
-
             if (this._scene.meshes.length) {
                 camera.lowerRadiusLimit = null;
 
@@ -293,201 +277,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         this.prepareCamera();
         this.prepareLighting();
         this.handleErrors();
-
-        console.log("onSceneLoaded", filename);
-
-        const pane = new Pane({
-            container: document.getElementById("paneContainer") as any,
-        });
-        pane.registerPlugin(CamerakitPlugin);
-        console.log(pane);
-
-        pane.addBlade({
-            view: "text",
-            label: "FILE",
-            parse: (v: any) => String(v),
-            value: filename,
-        });
-
-        const btn = pane.addButton({
-            title: "Start",
-            label: "AutoRotate", // optional
-        });
-
-        let count = 0;
-        btn.on("click", () => {
-            count += 1;
-            console.log(count);
-
-            if (btn.title === "Start") btn.title = "Stop";
-            else btn.title = "Start";
-
-            console.log(this._scene.activeCamera);
-
-            console.log(this._scene.environmentTexture);
-
-            if (this._scene.activeCamera instanceof ArcRotateCamera) {
-                this._scene.activeCamera.useAutoRotationBehavior = this._scene.activeCamera.useAutoRotationBehavior ? false : true;
-            }
-        });
-        //
-
-        const skybox: Mesh = this._scene.getMeshByName("hdrSkyBox") as Mesh;
-
-        if (skybox) {
-            //
-            if (skybox.material instanceof PBRMaterial) {
-                console.log(skybox.material);
-
-                const PARAMS = {
-                    speed: 50,
-                };
-
-                const skyRot = pane.addInput(PARAMS, "speed", {
-                    min: 0,
-                    max: Math.PI,
-                    label: "Sky Rotation",
-                    value: (this._scene.environmentTexture as CubeTexture).rotationY,
-                });
-                skyRot.on("change", (ev) => {
-                    console.log(ev);
-                    (this._scene.environmentTexture as CubeTexture).rotationY = ev.value;
-                });
-
-                const skyboxMat = skybox.material;
-                console.log("skyboxMat.microSurface", skyboxMat.microSurface);
-                const params = {
-                    key: skyboxMat.microSurface,
-                };
-                let skyboxBlur = pane.addInput(params, "key", {
-                    view: "cameraring",
-                    label: "Sky Blur",
-                    series: 0,
-                    // Scale unit
-                    unit: {
-                        // Pixels for the unit
-                        pixels: 50,
-                        // Number of ticks for the unit
-                        ticks: 10,
-                        // Amount of a value for the unit
-                        value: 0.2,
-                    },
-                    // You can use `min`, `max`, `step` same as a number input
-                    min: 0,
-                    max: 1,
-                    step: 0.02,
-                });
-
-                console.log("skyboxBlur", skyboxBlur);
-                skyboxBlur.on("change", (ev) => {
-                    console.log(ev);
-                    skyboxMat.microSurface = ev.value;
-                });
-            } //
-            //
-
-            const ScreenshotButton = pane.addButton({
-                title: "Screenshot!",
-                label: "Screenshot", // optional
-            });
-
-            let count = 0;
-            ScreenshotButton.on("click", () => {
-                count += 1;
-                console.log("ScreenshotButton", count);
-
-                CreateScreenshotAsync(this._engine, this._scene.activeCamera as ArcRotateCamera, { width: this._canvas.width, height: this._canvas.height }, "image/png").then(
-                    (data) => {
-                        if (document.getElementById("screenshotImage")) {
-                            document.getElementById("screenshotImage")?.remove();
-                        }
-
-                        let image = new Image();
-                        (image as any).src = data;
-                        image.id = "screenshotImage";
-
-                        document.body.appendChild(image);
-
-                        image.style.position = "absolute";
-                        image.style.top = "1px";
-                        image.style.left = "1px";
-                        image.style.width = this._canvas.width / 4 + "px";
-                        image.style.height = this._canvas.height / 4 + "px";
-
-                        console.log(image);
-                        //
-                        let saveButton = document.createElement("a");
-                        saveButton.innerText = "Save";
-                        document.body.appendChild(saveButton);
-                        saveButton.style.position = "absolute";
-                        saveButton.style.top = "0px";
-                        saveButton.style.left = "0px";
-                        saveButton.style.zIndex = "15000";
-                        saveButton.href = (image as any).src;
-
-                        saveButton.style.background = "#1e1d78";
-                        saveButton.style.color = "white";
-                        saveButton.style.textDecoration = "none";
-                        saveButton.style.display = "block";
-                        saveButton.style.padding = "5px";
-                        saveButton.style.paddingTop = "2px";
-
-                        let rnd: number = Math.floor(Math.random() * 1000);
-                        saveButton.download = "MockUp_" + rnd + ".png";
-                    }
-                    //
-                );
-            });
-
-            const disableSkyboxButton = pane.addButton({
-                title: "Disable Skybox",
-                label: "No Sky", // optional
-            });
-            disableSkyboxButton.on("click", () => {
-                skybox.isEnabled() ? skybox.setEnabled(false) : skybox.setEnabled(true);
-                if (disableSkyboxButton.title === "Disable Skybox") disableSkyboxButton.title = "Enable Skybox";
-                else disableSkyboxButton.title = "Disable Skybox";
-            });
-
-            const transparentBG = pane.addButton({
-                title: "Transparent BG",
-                label: "BG Transparent", // optional
-            });
-
-            transparentBG.on("click", () => {
-                console.log(this._scene.clearColor);
-
-                //   this._scene.clearColor = new Color4 (0.2,0.2,0.9,1)
-
-                if (this._scene.clearColor.a == 0) {
-                    this._scene.clearColor = new Color4(0.2, 0.2, 0.2, 1);
-                } else {
-                    this._scene.clearColor = new Color4(1, 1, 1, 0);
-                }
-
-                //      transparentBG.title === "Transparent BG" ? (transparentBG.title = "Color BG") : transparentBG.title === "Transparent BG";
-
-                if (transparentBG.title === "Transparent BG") transparentBG.title = "Non-transparent BG";
-                else transparentBG.title = "Transparent BG";
-            });
-
-            const PARAMS = {
-                primary: "#f05",
-                background: { r: 255, g: 0, b: 55 },
-                ClearColor: { r: this._scene.clearColor.r, g: this._scene.clearColor.g, b: this._scene.clearColor.b, a: this._scene.clearColor.a },
-            };
-
-            const chooseClearColor = pane.addInput(PARAMS, "ClearColor");
-
-            chooseClearColor.on("change", (ev) => {
-                console.log(`change: ${ev.value}`);
-                console.log(ev.value.r, ev.value.g, ev.value.b, ev.value.a);
-
-                this._scene.clearColor = new Color4(ev.value.r / 255, ev.value.g / 255, 1 / ev.value.b / 255, ev.value.a);
-            });
-
-            //
-        } // skybox
 
         if (this.props.globalState.isDebugLayerEnabled) {
             this.props.globalState.showDebugLayer();
