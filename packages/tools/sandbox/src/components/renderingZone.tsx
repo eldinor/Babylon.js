@@ -22,8 +22,9 @@ import { PBRBaseMaterial } from "core/Materials/PBR/pbrBaseMaterial";
 import { Texture } from "core/Materials/Textures/texture";
 import { PBRMaterial } from "core/Materials/PBR/pbrMaterial";
 
-import { mainPane, createPaneElements1, skyPaneElements, screenshotPane, screenshotButton, cameraPane, ppFolder } from "../tools/paneTools";
+// import { mainPane, createPaneElements1, skyPaneElements, screenshotPane, screenshotButton, cameraPane, ppFolder } from "../tools/paneTools";
 import { DefaultRenderingPipeline } from "core/PostProcesses/RenderPipeline/Pipelines/defaultRenderingPipeline";
+import { Viewport } from "core/Maths/math.viewport";
 
 function isTextureAsset(name: string): boolean {
     const queryStringIndex = name.indexOf("?");
@@ -145,10 +146,17 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             return true;
         };
 
-        filesInput.loadAsync = (sceneFile, onProgress) => {
+        filesInput.loadAsync = async (sceneFile, onProgress) => {
             const filesToLoad = filesInput.filesToLoad;
             if (filesToLoad.length === 1) {
                 const fileName = (filesToLoad[0] as any).correctName;
+
+
+                const blob = new Blob([filesToLoad[0]]);
+                const arr = new Uint8Array(await blob.arrayBuffer());
+                console.log(arr)
+
+
                 if (isTextureAsset(fileName)) {
                     return Promise.resolve(this.loadTextureAsset(`file:${fileName}`));
                 }
@@ -163,11 +171,16 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         this.props.globalState.filesInput = filesInput;
 
+        console.log(filesInput.filesToLoad)
+
+    
+
         window.addEventListener("keydown", (event) => {
             // Press R to reload
             if (event.keyCode === 82 && event.target && (event.target as HTMLElement).nodeName !== "INPUT" && this._scene) {
                 if (this.props.assetUrl) {
                     this.loadAssetFromUrl();
+                    console.log(this.props.assetUrl)
                 } else {
                     filesInput.reload();
                 }
@@ -186,6 +199,10 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 // glTF assets use a +Z forward convention while the default camera faces +Z. Rotate the camera to look at the front of the asset.
                 camera.alpha += Math.PI;
             }
+
+
+          
+
 
             // Enable camera's behaviors
             camera.useFramingBehavior = true;
@@ -216,9 +233,22 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
             camera.wheelDeltaPercentage = 0.01;
             camera.pinchDeltaPercentage = 0.01;
+
+            camera.viewport = new Viewport(0, 0, 0.5, 1.0);
+
+            const camera2 = camera.clone('camera2')
+            //            const camera2 = new ArcRotateCamera('camera2',1,1,5,Vector3.Zero() )
+
+            this._scene.activeCameras!.push(camera);
+            this._scene.activeCameras!.push(camera2);
+  
+            camera2.viewport = new Viewport(0.5, 0, 0.5, 1.0);
+            camera2.attachControl()
         }
 
         this._scene.activeCamera!.attachControl();
+
+        
     }
 
     handleErrors() {
@@ -277,22 +307,25 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         this.props.globalState.onSceneLoaded.notifyObservers({ scene: this._scene, filename: filename });
 
+
+        console.log(this.props)
+
         this.prepareCamera();
         this.prepareLighting();
-        this.createPipeline();
+     //   this.createPipeline();
         this.handleErrors();
 
-        const pane = mainPane(this._scene);
+    //    const pane = mainPane(this._scene);
 
         this._scene.onDisposeObservable.addOnce(() => {
             console.log("DISPOSE")
-            pane.dispose();
+       //     pane.dispose();
         });
 
         // getting pane children info
         //console.log((pane.children[0].controller_ as any).props.valMap_.label);
 
-        createPaneElements1(pane, this._scene, filename);
+    //    createPaneElements1(pane, this._scene, filename);
 
         // autoRotateButton
 
@@ -304,7 +337,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         if (skybox) {
             //
             if (skybox.material instanceof PBRMaterial) {
-                skyPaneElements(pane, this._scene, skybox.material);
+        //        skyPaneElements(pane, this._scene, skybox.material);
                 //
             }
         } //
@@ -315,18 +348,18 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         // Screenshot Button
 
-        cameraPane(pane, this._scene);
+      //  cameraPane(pane, this._scene);
 
-        const scrshotPane = screenshotPane();
+     //   const scrshotPane = screenshotPane();
 
         this._scene.onDisposeObservable.addOnce(() => {
             console.log("DISPOSE scrshotPane")
-            scrshotPane.dispose();
+        //    scrshotPane.dispose();
         });
 
-        screenshotButton(scrshotPane, this._scene, this._engine, this._canvas);
+      //  screenshotButton(scrshotPane, this._scene, this._engine, this._canvas);
 
-        ppFolder(pane, this._scene)
+     //   ppFolder(pane, this._scene)
 
         // #################################
         //
@@ -389,17 +422,34 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         return scene;
     }
 
-    loadAssetFromUrl() {
+     loadAssetFromUrl() {
         const assetUrl = this.props.assetUrl!;
         const rootUrl = Tools.GetFolderPath(assetUrl);
         const fileName = Tools.GetFilename(assetUrl);
 
         this._engine.clearInternalTexturesCache();
 
+     //   const assetArrayBuffer = await Tools.LoadFileAsync("scenes/BoomBox.glb", true);
+
+
+     console.log("assetUrl", assetUrl)
+     console.log("rootUrl", rootUrl)
+     console.log("fileName", fileName)
+
+     const assetArrayBuffer =  Tools.LoadFileAsync("https://playground.babylonjs.com/scenes/BoomBox.glb", true);
+
+     console.log(assetArrayBuffer)
+
         const promise = isTextureAsset(assetUrl) ? Promise.resolve(this.loadTextureAsset(assetUrl)) : SceneLoader.LoadAsync(rootUrl, fileName, this._engine);
+
+        console.log(promise)
 
         promise
             .then((scene) => {
+
+                console.log("assetUrl", assetUrl)
+                console.log("rootUrl", rootUrl)
+                console.log("fileName", fileName)
                 if (this._scene) {
                     this._scene.dispose();
                 }
@@ -408,7 +458,11 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
                 this.onSceneLoaded(fileName);
 
+
                 scene.whenReadyAsync().then(() => {
+                    console.log("assetUrl", assetUrl)
+                    console.log("rootUrl", rootUrl)
+                    console.log("fileName", fileName)
                     this._engine.runRenderLoop(() => {
                         scene.render();
                     });
@@ -422,6 +476,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
     loadAsset() {
         if (this.props.assetUrl) {
             this.loadAssetFromUrl();
+            console.log(this.props.assetUrl)
             return;
         }
     }
