@@ -21,6 +21,12 @@ import "../scss/renderingZone.scss";
 import { PBRBaseMaterial } from "core/Materials/PBR/pbrBaseMaterial";
 import { Texture } from "core/Materials/Textures/texture";
 import { PBRMaterial } from "core/Materials/PBR/pbrMaterial";
+//
+import { WebIO, Logger } from "@gltf-transform/core";
+import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
+
+import { inspect, textureCompress } from "@gltf-transform/functions";
+import { Viewport } from "core/Maths/math.viewport";
 
 function isTextureAsset(name: string): boolean {
     const queryStringIndex = name.indexOf("?");
@@ -28,7 +34,15 @@ function isTextureAsset(name: string): boolean {
         name = name.substring(0, queryStringIndex);
     }
 
-    return name.endsWith(".ktx") || name.endsWith(".ktx2") || name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg");
+    return (
+        name.endsWith(".ktx") ||
+        name.endsWith(".ktx2") ||
+        name.endsWith(".png") ||
+        name.endsWith(".jpg") ||
+        name.endsWith(".jpeg") ||
+        name.endsWith(".webp") ||
+        name.endsWith(".avif")
+    );
 }
 
 interface IRenderingZoneProps {
@@ -44,6 +58,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
     private _engine: Engine;
     private _scene: Scene;
     private _canvas: HTMLCanvasElement;
+    private _originBlob: Blob;
 
     public constructor(props: IRenderingZoneProps) {
         super(props);
@@ -132,7 +147,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             return true;
         };
 
-        filesInput.loadAsync = (sceneFile, onProgress) => {
+        filesInput.loadAsync = async (sceneFile, onProgress) => {
             const filesToLoad = filesInput.filesToLoad;
             if (filesToLoad.length === 1) {
                 const fileName = (filesToLoad[0] as any).correctName;
@@ -142,6 +157,8 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             }
 
             this._engine.clearInternalTexturesCache();
+
+            this._originBlob = new Blob([filesToLoad[0]]);
 
             return SceneLoader.LoadAsync("file:", sceneFile, this._engine, onProgress);
         };
@@ -203,6 +220,25 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
             camera.wheelDeltaPercentage = 0.01;
             camera.pinchDeltaPercentage = 0.01;
+
+            camera.viewport = new Viewport(0, 0, 0.5, 1.0);
+
+            const camera2 = camera.clone("camera2");
+            //            const camera2 = new ArcRotateCamera('camera2',1,1,5,Vector3.Zero() )
+
+            this._scene.activeCameras!.push(camera);
+            this._scene.activeCameras!.push(camera2);
+
+            camera2.viewport = new Viewport(0.5, 0, 0.5, 1.0);
+            camera2.attachControl();
+
+            camera2.layerMask = 0x20000000;
+
+            this._scene.onBeforeCameraRenderObservable.add(function () {
+                (camera2 as any).alpha = (camera as any).alpha;
+                (camera2 as any).beta = (camera as any).beta;
+                (camera2 as any).radius = (camera as any).radius;
+            });
         }
 
         this._scene.activeCamera!.attachControl();
@@ -257,9 +293,25 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 this._scene.createDefaultLight();
             }
         }
+
+        this._scene.onAfterRenderObservable.add(() => {
+            if (!this.props.globalState.skybox) {
+                this._scene.meshes.forEach((m) => {
+                    if (m.name.includes("hdrSky")) {
+                        m.setEnabled(false);
+                    }
+                });
+            } else {
+                this._scene.meshes.forEach((m) => {
+                    if (m.name.includes("hdrSky")) {
+                        m.setEnabled(true);
+                    }
+                });
+            }
+        });
     }
 
-    onSceneLoaded(filename: string) {
+    async onSceneLoaded(filename: string) {
         this._scene.skipFrustumClipping = true;
 
         this.props.globalState.onSceneLoaded.notifyObservers({ scene: this._scene, filename: filename });
@@ -268,11 +320,70 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         this.prepareLighting();
         this.handleErrors();
 
+        console.log();
+
+        if (this._scene.getMeshByName("hdrSkyBox")) {
+            const hdrSkyBox2 = (this._scene.getMeshByName("hdrSkyBox") as any).createInstance("hdrSkyBox2");
+            hdrSkyBox2.layerMask = 0x20000000;
+        }
+
         if (this.props.globalState.isDebugLayerEnabled) {
             this.props.globalState.showDebugLayer();
         }
 
         delete this._currentPluginName;
+        //
+        //
+
+        const arr = new Uint8Array(await this._originBlob.arrayBuffer());
+
+        document.getElementById("topLeft")!.innerHTML = (arr.length / (1024 * 1024)).toFixed(2).toString() + " Mb";
+
+        const io = new WebIO().registerExtensions(ALL_EXTENSIONS);
+
+        const doc = await io.readBinary(arr);
+
+        doc.setLogger(new Logger(Logger.Verbosity.DEBUG));
+
+        console.log(inspect(doc));
+
+        await doc.transform(
+            //    dedup(),
+            //   join({ keepMeshes: false, keepNamed: false }),
+            //   weld({ tolerance: 0.0001 }),
+            //  simplify({ simplifier: MeshoptSimplifier, ratio: 0.75, error: 0.001 }),
+            //    prune(),
+            //   reorder({ encoder: MeshoptEncoder }),
+            textureCompress({
+                targetFormat: "webp",
+                //, resize: [1024, 1024]
+            })
+        );
+
+        const glb = await io.writeBinary(doc);
+
+        const assetBlob = new Blob([glb]);
+        const assetUrl = URL.createObjectURL(assetBlob);
+
+        const newGLB = await SceneLoader.ImportMeshAsync("", assetUrl, undefined, this._scene, undefined, ".glb");
+
+        //  console.log(newGLB);
+
+        this.props.globalState.optURL = assetUrl;
+
+        document.getElementById("topRight")!.innerHTML = (glb.length / (1024 * 1024)).toFixed(2).toString()+ " Mb";
+
+        //  console.log(this.props.globalState.optURL)
+
+        const rr = newGLB.meshes[0];
+        //   this._scene.debugLayer.select(rr);
+
+        rr.getChildMeshes().forEach((element) => {
+            element.layerMask = 0x20000000;
+        });
+
+        //
+        //
     }
 
     loadTextureAsset(url: string): Scene {

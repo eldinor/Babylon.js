@@ -107,6 +107,9 @@
     "feature": "New Feature"
   },
   "dependencies": {
+    "@gltf-transform/core": "^3.10.0",
+    "@gltf-transform/extensions": "^3.10.0",
+    "@gltf-transform/functions": "^3.10.0",
     "lerna": "^7.0.2"
   }
 }

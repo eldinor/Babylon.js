@@ -16,6 +16,8 @@ import iconOpen from "../img/icon-open.svg";
 import iconIBL from "../img/icon-ibl.svg";
 import iconCameras from "../img/icon-cameras.svg";
 import iconVariants from "../img/icon-variants.svg";
+import iconDownload from "../img/icon-download.svg";
+import iconSkybox from "../img/icon-skybox.svg";
 
 interface IFooterProps {
     globalState: GlobalState;
@@ -39,6 +41,18 @@ export class Footer extends React.Component<IFooterProps> {
             } else {
                 this.props.globalState.showDebugLayer();
             }
+        }
+    }
+
+    showURL() {
+        if (this.props.globalState.optURL) {
+            console.log("showURL");
+            console.log(this.props.globalState.optURL);
+
+            const link = document.createElement("a");
+            link.href = this.props.globalState.optURL;
+            link.download = "aDefaultFileName.glb";
+            link.click();
         }
     }
 
@@ -112,6 +126,8 @@ export class Footer extends React.Component<IFooterProps> {
                 <div className="footerLeft">
                     <img id="logoImg" src={babylonIdentity} />
                 </div>
+                <div className="footerAfterLeft"></div>
+
                 <AnimationBar globalState={this.props.globalState} enabled={!!this.props.globalState.currentScene} />
                 <div className={"footerRight"}>
                     <FooterFileButton
@@ -160,6 +176,20 @@ export class Footer extends React.Component<IFooterProps> {
                         onOptionPicked={(option, index) => switchVariant(option, index)}
                         enabled={hasVariants}
                         searchPlaceholder="Search variant"
+                    />
+                    <FooterButton
+                        globalState={this.props.globalState}
+                        icon={iconSkybox}
+                        label="Toggle Skybox"
+                        onClick={() => (this.props.globalState.skybox = !this.props.globalState.skybox)}
+                        enabled={!!this.props.globalState.currentScene}
+                    />
+                    <FooterButton
+                        globalState={this.props.globalState}
+                        icon={iconDownload}
+                        label="Export GLB with WEBP textures"
+                        onClick={() => this.showURL()}
+                        enabled={!!this.props.globalState.currentScene}
                     />
                 </div>
             </div>

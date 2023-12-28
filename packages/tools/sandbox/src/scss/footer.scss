@@ -243,3 +243,17 @@
         }
     }
 }
+
+.footerAfterLeft {
+    display: block;
+    grid-column: 2;
+    grid-row: 1;
+    padding-left: 40px;
+    align-content: center;
+    overflow: hidden;
+
+
+}
+.footerAfterLeft img{
+        width: 70px;position: relative;
+}

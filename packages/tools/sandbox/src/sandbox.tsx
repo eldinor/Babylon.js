@@ -196,6 +196,12 @@ export class Sandbox extends React.Component<ISandboxProps, { isFooterVisible: b
     public render() {
         return (
             <div id="root">
+                <div id="topBar">
+      <div className="row">
+        <div className="column"  id="topLeft">Original Size</div>
+        <div className="column" id="topRight">Converted Size</div>
+      </div>
+      </div>
                 <span>
                     <p id="droptext" ref={this._dropTextRef}>
                         {this._globalState.reflector ? "" : "Drag and drop gltf, glb, obj or babylon files to view them"}

@@ -24,6 +24,8 @@ export class GlobalState {
 
     public skybox = true;
 
+    public optURL: string;
+
     public showDebugLayer() {
         this.isDebugLayerEnabled = true;
         if (this.currentScene) {
