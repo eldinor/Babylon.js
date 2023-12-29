@@ -254,6 +254,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 (camera2 as any).alpha = (camera as any).alpha;
                 (camera2 as any).beta = (camera as any).beta;
                 (camera2 as any).radius = (camera as any).radius;
+                (camera2 as any).target = (camera as any).target
             });
         }
 
