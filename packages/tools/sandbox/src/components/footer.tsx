@@ -10,7 +10,7 @@ import type { KHR_materials_variants } from "loaders/glTF/2.0/Extensions/KHR_mat
 import type { Mesh } from "core/Meshes/mesh";
 
 import "../scss/footer.scss";
-import babylonIdentity from "../img/babylon-identity.svg";
+// import babylonIdentity from "../img/logo-babylonpress-GB-s.png";
 import iconEdit from "../img/icon-edit.svg";
 import iconOpen from "../img/icon-open.svg";
 import iconIBL from "../img/icon-ibl.svg";
@@ -46,12 +46,12 @@ export class Footer extends React.Component<IFooterProps> {
 
     showURL() {
         if (this.props.globalState.optURL) {
-            console.log("showURL");
-            console.log(this.props.globalState.optURL);
+            //   console.log("showURL");
+            //  console.log(this.props.globalState.optURL);
 
             const link = document.createElement("a");
             link.href = this.props.globalState.optURL;
-            link.download = "aDefaultFileName.glb";
+            link.download = this.props.globalState.origFilename.replace(/\.[^/.]+$/, "") + "-webp.glb";
             link.click();
         }
     }
@@ -124,7 +124,9 @@ export class Footer extends React.Component<IFooterProps> {
         return (
             <div id="footer" className={"footer" + (hasCameras || hasVariants ? " long" : hasCameras && hasVariants ? " longer" : "")}>
                 <div className="footerLeft">
-                    <img id="logoImg" src={babylonIdentity} />
+                    <a href="https://babylonpress.org/" target={"_blank"}>
+                        <img id="logoImg" src={"https://babylonpress.org/wp-content/uploads/2020/12/logo-babylonpress-GB-s.png"} />
+                    </a>
                 </div>
                 <div className="footerAfterLeft"></div>
 

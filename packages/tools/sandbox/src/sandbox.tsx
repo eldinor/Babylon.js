@@ -13,7 +13,7 @@ import type { IScreenshotSize } from "core/Misc/interfaces/screenshotSize";
 import { Color3, Color4 } from "core/Maths/math";
 
 import "./scss/main.scss";
-import fullScreenLogo from "./img/logo-fullscreen.svg";
+import fullScreenLogo from "./img/icon-full.svg";
 
 interface ISandboxProps {}
 
@@ -204,7 +204,7 @@ export class Sandbox extends React.Component<ISandboxProps, { isFooterVisible: b
       </div>
                 <span>
                     <p id="droptext" ref={this._dropTextRef}>
-                        {this._globalState.reflector ? "" : "Drag and drop gltf, glb, obj or babylon files to view them"}
+                        {this._globalState.reflector ? "" : "Drag and drop gltf, glb, obj or babylon files to convert and export them with WEBP textures"}
                     </p>
                     {this._globalState.reflector ? (
                         <ReflectorZone globalState={this._globalState} expanded={!this.state.isFooterVisible} />

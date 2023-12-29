@@ -91,7 +91,7 @@ body,
         cursor: pointer;
         background: transparent;
         border: 0;
-        -webkit-appearance: none;
+     //   -webkit-appearance: none;
         color: #000;
         text-shadow: 0 1px 0 #fff;
         opacity: 0.4;
@@ -120,6 +120,7 @@ body,
 #topBar{
     position: absolute;
     margin: 0;
+    padding: 2px;
     width: 100%;
     z-index: 1000;
   }

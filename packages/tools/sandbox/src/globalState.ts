@@ -25,6 +25,7 @@ export class GlobalState {
     public skybox = true;
 
     public optURL: string;
+    public origFilename: string;
 
     public showDebugLayer() {
         this.isDebugLayerEnabled = true;

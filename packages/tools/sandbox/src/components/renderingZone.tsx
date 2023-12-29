@@ -59,6 +59,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
     private _scene: Scene;
     private _canvas: HTMLCanvasElement;
     private _originBlob: Blob;
+    // private _originFilename: string;
 
     public constructor(props: IRenderingZoneProps) {
         super(props);
@@ -157,8 +158,23 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             }
 
             this._engine.clearInternalTexturesCache();
-
+            //
+            //
             this._originBlob = new Blob([filesToLoad[0]]);
+
+            //   console.log("filesToLoad[0]", filesToLoad[0] )
+
+            this.props.globalState.origFilename = (filesToLoad[0] as any).correctName;
+            /*
+           let extension = this._originFilename.split('.').pop();
+           console.log(extension)
+
+
+           console.log(this._originFilename.replace(/\.[^/.]+$/, ""))
+           console.log(this._originFilename)
+           */
+            //
+            //
 
             return SceneLoader.LoadAsync("file:", sceneFile, this._engine, onProgress);
         };
@@ -336,8 +352,9 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         //
 
         const arr = new Uint8Array(await this._originBlob.arrayBuffer());
-
-        document.getElementById("topLeft")!.innerHTML = (arr.length / (1024 * 1024)).toFixed(2).toString() + " Mb";
+        document.getElementById("topLeft")!.innerHTML = this.props.globalState.origFilename;
+        document.getElementById("topLeft")!.innerHTML += " | ";
+        document.getElementById("topLeft")!.innerHTML += "<strong>"+(arr.length / (1024 * 1024)).toFixed(2).toString() + " Mb</strong>";
 
         const io = new WebIO().registerExtensions(ALL_EXTENSIONS);
 
@@ -371,7 +388,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         this.props.globalState.optURL = assetUrl;
 
-        document.getElementById("topRight")!.innerHTML = (glb.length / (1024 * 1024)).toFixed(2).toString()+ " Mb";
+        document.getElementById("topRight")!.innerHTML = "With WEBP Textures: <strong>" + (glb.length / (1024 * 1024)).toFixed(2).toString() + " Mb</strong>";
 
         //  console.log(this.props.globalState.optURL)
 
