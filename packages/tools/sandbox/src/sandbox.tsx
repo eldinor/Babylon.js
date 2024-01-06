@@ -204,7 +204,7 @@ export class Sandbox extends React.Component<ISandboxProps, { isFooterVisible: b
       </div>
                 <span>
                     <p id="droptext" ref={this._dropTextRef}>
-                        {this._globalState.reflector ? "" : "Drag and drop gltf, glb, obj or babylon files to convert and export them with WEBP textures"}
+                        {this._globalState.reflector ? "" : "Drag and drop uncompressed GLTF or GLB files to convert and export them as GLB with WEBP textures (obj and babylon files should be converted to GLB format)"}
                     </p>
                     {this._globalState.reflector ? (
                         <ReflectorZone globalState={this._globalState} expanded={!this.state.isFooterVisible} />
