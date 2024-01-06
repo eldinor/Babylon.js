@@ -7,7 +7,7 @@ import { SceneLoader } from "core/Loading/sceneLoader";
 import { GLTFFileLoader } from "loaders/glTF/glTFFileLoader";
 import { Scene } from "core/scene";
 import type { Vector3 } from "core/Maths/math.vector";
-import type { ArcRotateCamera } from "core/Cameras/arcRotateCamera";
+import { ArcRotateCamera } from "core/Cameras/arcRotateCamera";
 import type { FramingBehavior } from "core/Behaviors/Cameras/framingBehavior";
 import { EnvironmentTools } from "../tools/environmentTools";
 import { Tools } from "core/Misc/tools";
@@ -27,6 +27,7 @@ import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
 
 import { inspect, textureCompress } from "@gltf-transform/functions";
 import { Viewport } from "core/Maths/math.viewport";
+import { compareImages } from "../tools/compareImages";
 
 function isTextureAsset(name: string): boolean {
     const queryStringIndex = name.indexOf("?");
@@ -254,7 +255,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 (camera2 as any).alpha = (camera as any).alpha;
                 (camera2 as any).beta = (camera as any).beta;
                 (camera2 as any).radius = (camera as any).radius;
-                (camera2 as any).target = (camera as any).target
+                (camera2 as any).target = (camera as any).target;
             });
         }
 
@@ -355,7 +356,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         const arr = new Uint8Array(await this._originBlob.arrayBuffer());
         document.getElementById("topLeft")!.innerHTML = this.props.globalState.origFilename;
         document.getElementById("topLeft")!.innerHTML += " | ";
-        document.getElementById("topLeft")!.innerHTML += "<strong>"+(arr.length / (1024 * 1024)).toFixed(2).toString() + " Mb</strong>";
+        document.getElementById("topLeft")!.innerHTML += "<strong>" + (arr.length / (1024 * 1024)).toFixed(2).toString() + " Mb</strong>";
 
         const io = new WebIO().registerExtensions(ALL_EXTENSIONS);
 
@@ -398,6 +399,63 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         rr.getChildMeshes().forEach((element) => {
             element.layerMask = 0x20000000;
+        });
+        //
+
+        const compImg = await compareImages(
+            "https://raw.githubusercontent.com/eldinor/ForBJS/master/bird1.jpg",
+            "https://raw.githubusercontent.com/eldinor/ForBJS/master/bird2.jpg"
+        );
+
+        console.log(compImg);
+
+        //
+
+        const camScreen = this._scene.getCameraByName("default camera")!.clone("camScreen");
+
+        const camScreen2 = this._scene.getCameraByName("camera2")!.clone("camScreen");
+
+        // console.log(camScreen)
+        /*
+        this._scene.activeCameras!.push(camScreen)
+        this._scene.activeCamera = camScreen
+        
+            const scr1 = await CreateScreenshotUsingRenderTargetAsync(this._scene.getEngine(), camScreen, {width:1000, height:600},"image/png");
+            console.log(scr1)
+        */
+
+        this._scene.executeWhenReady(() => {
+            Tools.CreateScreenshotUsingRenderTargetAsync(this._engine, camScreen, { width: this._canvas.width, height: this._canvas.height }).then((base64Data) => {
+                const linkSource = base64Data;
+                const downloadLink = document.createElement("a");
+                downloadLink.href = linkSource;
+                downloadLink.download = "test.png";
+                //   downloadLink.click();
+
+                console.log(base64Data);
+
+                Tools.CreateScreenshotUsingRenderTargetAsync(this._engine, camScreen2, { width: this._canvas.width, height: this._canvas.height }).then((base64Data2) => {
+                    const linkSource = base64Data2;
+                    const downloadLink = document.createElement("a");
+                    downloadLink.href = linkSource;
+                    downloadLink.download = "cam2.png";
+                    //    downloadLink.click();
+//
+
+ compareImages(base64Data,base64Data2).then((res)=>{
+    console.log(res)
+    const downloadLink = document.createElement("a");
+                    downloadLink.href = res.dataURL;
+                    downloadLink.download = "dataURL.png";
+                    downloadLink.click();
+ })
+
+
+
+                    //
+
+                });
+            });
         });
 
         //
