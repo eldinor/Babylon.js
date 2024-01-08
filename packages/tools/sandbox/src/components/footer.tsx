@@ -63,6 +63,8 @@ export class Footer extends React.Component<IFooterProps> {
 makeScreenshot(){
     console.log("Screenshot")
 
+    this.props.globalState.currentScene.executeWhenReady(() => {
+
     const camScreen = this.props.globalState.currentScene.getCameraByName("default camera")!.clone("camScreen");
 
     const camScreen2 = this.props.globalState.currentScene.getCameraByName("camera2")!.clone("camScreen");
@@ -70,6 +72,12 @@ makeScreenshot(){
 
 
         this.props.globalState.skybox = false
+
+        setTimeout(() => {
+            
+     
+
+
         Tools.CreateScreenshotUsingRenderTargetAsync(this.props.globalState.currentScene.getEngine(), 
         camScreen, { width: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.width, height: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.height }).then((base64Data) => {
             const linkSource = base64Data;
@@ -107,7 +115,11 @@ const downloadLink = document.createElement("a");
         camScreen.dispose()
         camScreen2.dispose()
 
+    }, 50);
 
+
+
+    })
 
 }
 
