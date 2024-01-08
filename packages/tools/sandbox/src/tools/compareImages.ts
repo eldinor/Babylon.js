@@ -8,7 +8,7 @@ interface IpmResult {
 }
 //
 
-export async function compareImages(src1: string, src2: string) {
+export async function compareImages(src1: string, src2: string): Promise<IpmResult> {
     let pmResult: IpmResult;
     let canvas1 = document.getElementById("canvas1") as HTMLCanvasElement;
     if (!canvas1) {

@@ -18,6 +18,8 @@ import iconCameras from "../img/icon-cameras.svg";
 import iconVariants from "../img/icon-variants.svg";
 import iconDownload from "../img/icon-download.svg";
 import iconSkybox from "../img/icon-skybox.svg";
+import {compareImages} from "../tools/compareImages";
+import { Tools } from "core/Misc/tools";
 
 interface IFooterProps {
     globalState: GlobalState;
@@ -55,7 +57,62 @@ export class Footer extends React.Component<IFooterProps> {
             link.click();
         }
     }
+    //
+    //
 
+makeScreenshot(){
+    console.log("Screenshot")
+
+    const camScreen = this.props.globalState.currentScene.getCameraByName("default camera")!.clone("camScreen");
+
+    const camScreen2 = this.props.globalState.currentScene.getCameraByName("camera2")!.clone("camScreen");
+
+
+
+        this.props.globalState.skybox = false
+        Tools.CreateScreenshotUsingRenderTargetAsync(this.props.globalState.currentScene.getEngine(), 
+        camScreen, { width: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.width, height: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.height }).then((base64Data) => {
+            const linkSource = base64Data;
+            const downloadLink = document.createElement("a");
+            downloadLink.href = linkSource;
+            downloadLink.download = "test.png";
+            //   downloadLink.click();
+
+            console.log(base64Data);
+
+            Tools.CreateScreenshotUsingRenderTargetAsync(this.props.globalState.currentScene.getEngine(), 
+            camScreen2, { width: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.width, height: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.height  }).then((base64Data2) => {
+                const linkSource = base64Data2;
+                const downloadLink = document.createElement("a");
+                downloadLink.href = linkSource;
+                downloadLink.download = "cam2.png";
+                //    downloadLink.click();
+//
+
+compareImages(base64Data, base64Data2).then((res)=>{
+console.log(res)
+const downloadLink = document.createElement("a");
+                downloadLink.href = res.dataURL;
+                downloadLink.download = "dataURL.png";
+            //    downloadLink.click();
+})
+
+
+
+                //
+
+            });
+        });
+
+        camScreen.dispose()
+        camScreen2.dispose()
+
+
+
+}
+
+    //
+    //
     switchCamera(index: number) {
         const camera = this.props.globalState.currentScene!.cameras[index];
 
@@ -191,6 +248,13 @@ export class Footer extends React.Component<IFooterProps> {
                         icon={iconDownload}
                         label="Export GLB with WEBP textures"
                         onClick={() => this.showURL()}
+                        enabled={!!this.props.globalState.currentScene}
+                    />
+                                        <FooterButton
+                        globalState={this.props.globalState}
+                        icon={iconCameras}
+                        label="Screenshot"
+                        onClick={() => this.makeScreenshot()}
                         enabled={!!this.props.globalState.currentScene}
                     />
                 </div>

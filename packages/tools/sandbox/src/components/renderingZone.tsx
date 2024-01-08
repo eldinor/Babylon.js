@@ -27,7 +27,7 @@ import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
 
 import { inspect, textureCompress } from "@gltf-transform/functions";
 import { Viewport } from "core/Maths/math.viewport";
-import { compareImages } from "../tools/compareImages";
+// import { compareImages } from "../tools/compareImages";
 
 function isTextureAsset(name: string): boolean {
     const queryStringIndex = name.indexOf("?");
@@ -402,18 +402,9 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
         //
 
-        const compImg = await compareImages(
-            "https://raw.githubusercontent.com/eldinor/ForBJS/master/bird1.jpg",
-            "https://raw.githubusercontent.com/eldinor/ForBJS/master/bird2.jpg"
-        );
+ 
 
-        console.log(compImg);
 
-        //
-
-        const camScreen = this._scene.getCameraByName("default camera")!.clone("camScreen");
-
-        const camScreen2 = this._scene.getCameraByName("camera2")!.clone("camScreen");
 
         // console.log(camScreen)
         /*
@@ -423,8 +414,14 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             const scr1 = await CreateScreenshotUsingRenderTargetAsync(this._scene.getEngine(), camScreen, {width:1000, height:600},"image/png");
             console.log(scr1)
         */
+/*
 
+        const camScreen = this._scene.getCameraByName("default camera")!.clone("camScreen");
+
+        const camScreen2 = this._scene.getCameraByName("camera2")!.clone("camScreen");
         this._scene.executeWhenReady(() => {
+
+            this.props.globalState.skybox = false
             Tools.CreateScreenshotUsingRenderTargetAsync(this._engine, camScreen, { width: this._canvas.width, height: this._canvas.height }).then((base64Data) => {
                 const linkSource = base64Data;
                 const downloadLink = document.createElement("a");
@@ -447,7 +444,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
     const downloadLink = document.createElement("a");
                     downloadLink.href = res.dataURL;
                     downloadLink.download = "dataURL.png";
-                    downloadLink.click();
+                //    downloadLink.click();
  })
 
 
@@ -456,8 +453,11 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
                 });
             });
-        });
 
+            camScreen.dispose()
+            camScreen2.dispose()
+        });
+*/
         //
         //
     }
