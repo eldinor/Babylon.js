@@ -27,6 +27,8 @@ export class GlobalState {
     public optURL: string;
     public origFilename: string;
 
+    public resizeValue: string;
+
     public showDebugLayer() {
         this.isDebugLayerEnabled = true;
         if (this.currentScene) {

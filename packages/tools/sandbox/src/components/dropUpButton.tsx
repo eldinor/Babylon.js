@@ -87,8 +87,9 @@ export class DropUpButton extends React.Component<IDropUpButtonProps, { isOpen: 
                                     <div title={o} key={o} onClick={() => this.clickOption(o, i)} className="dropup-content-line">
                                         <div
                                             style={{
-                                                opacity: this.props.activeEntry() === o ? "1.0" : "0.8",
+                                                opacity: this.props.activeEntry() === o ? "1.0" : "0.6",
                                                 fontSize: this.props.activeEntry() === o ? "var(--active-font-size)" : "var(--font-size)",
+                                                color: this.props.activeEntry() === o ? "#b7dddd" : "white",
                                             }}
                                         >
                                             {o}

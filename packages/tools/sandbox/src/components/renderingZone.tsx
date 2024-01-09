@@ -366,6 +366,19 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         console.log(inspect(doc));
 
+        console.log(this.props.globalState.resizeValue)
+
+       const getResizeValue = localStorage.getItem("resizeValue")
+       console.log('getResizeValue',getResizeValue)
+
+       if(getResizeValue) {
+        this.props.globalState.resizeValue = getResizeValue
+       }
+
+        if (this.props.globalState.resizeValue == undefined || this.props.globalState.resizeValue == 'No Resize'){
+            console.log("UNDEFINED | NO RESIZE")
+       
+
         await doc.transform(
             //    dedup(),
             //   join({ keepMeshes: false, keepNamed: false }),
@@ -378,7 +391,22 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 //, resize: [1024, 1024]
             })
         );
+    }
+    else{
+        await doc.transform(
+            //    dedup(),
+            //   join({ keepMeshes: false, keepNamed: false }),
+            //   weld({ tolerance: 0.0001 }),
+            //  simplify({ simplifier: MeshoptSimplifier, ratio: 0.75, error: 0.001 }),
+            //    prune(),
+            //   reorder({ encoder: MeshoptEncoder }),
+            textureCompress({
+                targetFormat: "webp",
+                 resize: [Number(this.props.globalState.resizeValue),Number(this.props.globalState.resizeValue)]
+            })
+        );
 
+    }
         const glb = await io.writeBinary(doc);
 
         const assetBlob = new Blob([glb]);
