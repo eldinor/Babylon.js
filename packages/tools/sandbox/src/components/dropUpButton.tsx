@@ -57,7 +57,7 @@ export class DropUpButton extends React.Component<IDropUpButtonProps, { isOpen: 
             return null;
         }
 
-        const searchPlaceholder = this.props.searchPlaceholder ?? "Search...";
+//        const searchPlaceholder = this.props.searchPlaceholder ?? "Search...";
 
         return (
             <div className="dropup">
@@ -77,7 +77,9 @@ export class DropUpButton extends React.Component<IDropUpButtonProps, { isOpen: 
                 )}
                 {this.state.isOpen && (
                     <div className={"dropup-content" + (this.props.selectedOption ? " long-mode" : "")}>
+                        {/*
                         <input type="text" placeholder={searchPlaceholder} value={this.state.searchText} onChange={this.onChangeSearchText} />
+                        */ }
                         {this.props.options
                             .filter((o) => {
                                 return !this.state.searchText || o.toLowerCase().indexOf(this.state.searchText.toLowerCase().trim()) > -1;

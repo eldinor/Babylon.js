@@ -92,6 +92,18 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         this._engine.loadingUIBackgroundColor = "#2A2342";
 
+        const getResizeValue = localStorage.getItem("resizeValue")
+       
+
+        if(getResizeValue) {
+         this.props.globalState.resizeValue = getResizeValue
+        }
+        else {
+            this.props.globalState.resizeValue = "No Resize"
+        }
+
+        console.log('getResizeValue',getResizeValue)
+
         // Resize
         window.addEventListener("resize", () => {
             this._engine.resize();
@@ -352,11 +364,17 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         delete this._currentPluginName;
         //
         //
+        
+
+
+
+
+       console.log(this.props.globalState.resizeValue)
 
         const arr = new Uint8Array(await this._originBlob.arrayBuffer());
         document.getElementById("topLeft")!.innerHTML = this.props.globalState.origFilename;
         document.getElementById("topLeft")!.innerHTML += " | ";
-        document.getElementById("topLeft")!.innerHTML += "<strong>" + (arr.length / (1024 * 1024)).toFixed(2).toString() + " Mb</strong>";
+        document.getElementById("topLeft")!.innerHTML += "<strong>" + (arr.length / (1024 * 1024)).toFixed(2).toString() + " Mb</strong>" ;
 
         const io = new WebIO().registerExtensions(ALL_EXTENSIONS);
 
@@ -366,14 +384,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         console.log(inspect(doc));
 
-        console.log(this.props.globalState.resizeValue)
 
-       const getResizeValue = localStorage.getItem("resizeValue")
-       console.log('getResizeValue',getResizeValue)
-
-       if(getResizeValue) {
-        this.props.globalState.resizeValue = getResizeValue
-       }
 
         if (this.props.globalState.resizeValue == undefined || this.props.globalState.resizeValue == 'No Resize'){
             console.log("UNDEFINED | NO RESIZE")
@@ -402,7 +413,8 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             //   reorder({ encoder: MeshoptEncoder }),
             textureCompress({
                 targetFormat: "webp",
-                 resize: [Number(this.props.globalState.resizeValue),Number(this.props.globalState.resizeValue)]
+                 resize: [Number(this.props.globalState.resizeValue),Number(this.props.globalState.resizeValue)],
+               //  slots: /^(?!normalTexture).*$/ // exclude normal maps
             })
         );
 
@@ -418,7 +430,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         this.props.globalState.optURL = assetUrl;
 
-        document.getElementById("topRight")!.innerHTML = "With WEBP Textures: <strong>" + (glb.length / (1024 * 1024)).toFixed(2).toString() + " Mb</strong>";
+        document.getElementById("topRight")!.innerHTML = "With WEBP Textures: <strong>" + (glb.length / (1024 * 1024)).toFixed(2).toString() + " Mb</strong> / Resize: "+ this.props.globalState.resizeValue;
 
         //  console.log(this.props.globalState.optURL)
 

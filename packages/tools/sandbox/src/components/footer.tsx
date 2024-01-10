@@ -28,7 +28,7 @@ interface IFooterProps {
 
 export class Footer extends React.Component<IFooterProps> {
     private _cameraNames: string[] = [];
-    public resizeOptions: string[] = ["No Resize", "1024", "512"];
+    public resizeOptions: string[] = ["No Resize", "2048", "1024", "512", "256"];
 
     public constructor(props: IFooterProps) {
         super(props);
@@ -131,7 +131,7 @@ export class Footer extends React.Component<IFooterProps> {
         console.log(option);
         this.props.globalState.resizeValue = option
 
-        console.log(this.resizeOptions.indexOf(option))
+     //   console.log(this.resizeOptions.indexOf(option))
         localStorage.setItem('resizeValue', option)
         
         
@@ -275,6 +275,7 @@ export class Footer extends React.Component<IFooterProps> {
                         onClick={() => this.showURL()}
                         enabled={!!this.props.globalState.currentScene}
                     />
+                    {/*
                     <FooterButton
                         globalState={this.props.globalState}
                         icon={iconCameras}
@@ -282,6 +283,7 @@ export class Footer extends React.Component<IFooterProps> {
                         onClick={() => this.makeScreenshot()}
                         enabled={!!this.props.globalState.currentScene}
                     />
+                    */}
                     <DropUpButton
                         globalState={this.props.globalState}
                         icon={iconFullScreen}
@@ -289,7 +291,7 @@ export class Footer extends React.Component<IFooterProps> {
                         options={this.resizeOptions}
                         activeEntry={() => this.props.globalState.resizeValue}
                         onOptionPicked={(option) => this.defineResize(option)}
-                        enabled={!!this.props.globalState.currentScene}
+                        enabled={true}
                         
                     />
                 </div>
