@@ -25,7 +25,11 @@ import { PBRMaterial } from "core/Materials/PBR/pbrMaterial";
 import { WebIO, Logger } from "@gltf-transform/core";
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
 
-import { inspect, textureCompress } from "@gltf-transform/functions";
+import { MeshoptEncoder, MeshoptSimplifier } from "meshoptimizer";
+
+// import {DracoDecoderModule} from "draco3dgltf";
+
+import { inspect, textureCompress, dedup, join, weld, prune, resample, instance, quantize, reorder, simplify } from "@gltf-transform/functions";
 import { Viewport } from "core/Maths/math.viewport";
 // import { compareImages } from "../tools/compareImages";
 
@@ -92,17 +96,15 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         this._engine.loadingUIBackgroundColor = "#2A2342";
 
-        const getResizeValue = localStorage.getItem("resizeValue")
-       
+        const getResizeValue = localStorage.getItem("resizeValue");
 
-        if(getResizeValue) {
-         this.props.globalState.resizeValue = getResizeValue
-        }
-        else {
-            this.props.globalState.resizeValue = "No Resize"
+        if (getResizeValue) {
+            this.props.globalState.resizeValue = getResizeValue;
+        } else {
+            this.props.globalState.resizeValue = "No Resize";
         }
 
-        console.log('getResizeValue',getResizeValue)
+        console.log("getResizeValue", getResizeValue);
 
         // Resize
         window.addEventListener("resize", () => {
@@ -364,17 +366,15 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         delete this._currentPluginName;
         //
         //
-        
 
+        //    console.log(DracoDecoder)
 
-
-
-       console.log(this.props.globalState.resizeValue)
+        console.log(this.props.globalState.resizeValue);
 
         const arr = new Uint8Array(await this._originBlob.arrayBuffer());
         document.getElementById("topLeft")!.innerHTML = this.props.globalState.origFilename;
         document.getElementById("topLeft")!.innerHTML += " | ";
-        document.getElementById("topLeft")!.innerHTML += "<strong>" + (arr.length / (1024 * 1024)).toFixed(2).toString() + " Mb</strong>" ;
+        document.getElementById("topLeft")!.innerHTML += "<strong>" + (arr.length / (1024 * 1024)).toFixed(2).toString() + " Mb</strong>";
 
         const io = new WebIO().registerExtensions(ALL_EXTENSIONS);
 
@@ -384,41 +384,56 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         console.log(inspect(doc));
 
+        await MeshoptEncoder.ready;
 
+        if (this.props.globalState.resizeValue == undefined || this.props.globalState.resizeValue == "No Resize") {
+            console.log("UNDEFINED | NO RESIZE");
 
-        if (this.props.globalState.resizeValue == undefined || this.props.globalState.resizeValue == 'No Resize'){
-            console.log("UNDEFINED | NO RESIZE")
-       
+            await doc.transform(
+                dedup(),
 
-        await doc.transform(
-            //    dedup(),
-            //   join({ keepMeshes: false, keepNamed: false }),
-            //   weld({ tolerance: 0.0001 }),
-            //  simplify({ simplifier: MeshoptSimplifier, ratio: 0.75, error: 0.001 }),
-            //    prune(),
-            //   reorder({ encoder: MeshoptEncoder }),
-            textureCompress({
-                targetFormat: "webp",
+                //   weld({ tolerance: 0.001, toleranceNormal: 0.5 }),
+                //
+                prune(),
+                resample(),
+                join({ keepMeshes: false, keepNamed: false }),
+                backfaceCulling({ cull: false }),
+                weld({ tolerance: 0.001, toleranceNormal: 0.5 }),
+           
+
+                reorder({ encoder: MeshoptEncoder }),
+              quantize(),
+
+             simplify({ simplifier: MeshoptSimplifier, ratio: 0.75, error: 0.001 }),
+                instance({ min: 2 }),
+                 //  textureCompress({
+                 //   targetFormat: "webp",
                 //, resize: [1024, 1024]
-            })
-        );
-    }
-    else{
-        await doc.transform(
-            //    dedup(),
-            //   join({ keepMeshes: false, keepNamed: false }),
-            //   weld({ tolerance: 0.0001 }),
-            //  simplify({ simplifier: MeshoptSimplifier, ratio: 0.75, error: 0.001 }),
-            //    prune(),
-            //   reorder({ encoder: MeshoptEncoder }),
-            textureCompress({
-                targetFormat: "webp",
-                 resize: [Number(this.props.globalState.resizeValue),Number(this.props.globalState.resizeValue)],
-               //  slots: /^(?!normalTexture).*$/ // exclude normal maps
-            })
-        );
+             //   })
+            );
+        } else {
+            await doc.transform(
+                //    dedup(),
+                //   join({ keepMeshes: false, keepNamed: false }),
+                //   weld({ tolerance: 0.0001 }),
+                //  simplify({ simplifier: MeshoptSimplifier, ratio: 0.75, error: 0.001 }),
+                //    prune(),
+                //   reorder({ encoder: MeshoptEncoder }),
+                textureCompress({
+                    targetFormat: "webp",
+                    resize: [Number(this.props.globalState.resizeValue), Number(this.props.globalState.resizeValue)],
+                    //  slots: /^(?!normalTexture).*$/ // exclude normal maps
+                })
+            );
+        }
 
-    }
+        function backfaceCulling(options: any) {
+            return (doc: any) => {
+                for (const material of doc.getRoot().listMaterials()) {
+                    material.setDoubleSided(!options.cull);
+                }
+            };
+        }
         const glb = await io.writeBinary(doc);
 
         const assetBlob = new Blob([glb]);
@@ -430,7 +445,8 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         this.props.globalState.optURL = assetUrl;
 
-        document.getElementById("topRight")!.innerHTML = "With WEBP Textures: <strong>" + (glb.length / (1024 * 1024)).toFixed(2).toString() + " Mb</strong> / Resize: "+ this.props.globalState.resizeValue;
+        document.getElementById("topRight")!.innerHTML =
+            "With WEBP Textures: <strong>" + (glb.length / (1024 * 1024)).toFixed(2).toString() + " Mb</strong> / Resize: " + this.props.globalState.resizeValue;
 
         //  console.log(this.props.globalState.optURL)
 
@@ -442,10 +458,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
         //
 
- 
-
-
-
         // console.log(camScreen)
         /*
         this._scene.activeCameras!.push(camScreen)
@@ -454,7 +466,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             const scr1 = await CreateScreenshotUsingRenderTargetAsync(this._scene.getEngine(), camScreen, {width:1000, height:600},"image/png");
             console.log(scr1)
         */
-/*
+        /*
 
         const camScreen = this._scene.getCameraByName("default camera")!.clone("camScreen");
 

@@ -21,6 +21,7 @@ import iconSkybox from "../img/icon-skybox.svg";
 import iconFullScreen  from "../../Assets/icon_Fullscreen.svg"
 import { compareImages } from "../tools/compareImages";
 import { Tools } from "core/Misc/tools";
+import { Layer } from "core/Layers/layer";
 
 interface IFooterProps {
     globalState: GlobalState;
@@ -103,8 +104,22 @@ export class Footer extends React.Component<IFooterProps> {
                                     console.log(res)
                                     const downloadLink = document.createElement("a");
                                     downloadLink.href = res.dataURL;
+
                                     downloadLink.download = "dataURL.png";
                                     //    downloadLink.click();
+                                    //@ts-ignore
+                                    let screenLayer = new Layer('screenLayer',res.dataURL,this.props.globalState.currentScene,false)
+                                    console.log(screenLayer)
+
+                                    this.props.globalState.currentScene.onPointerObservable.addOnce(function(){
+                                        setTimeout(() => {
+                                            screenLayer.dispose()
+                                        }, 3000);
+
+                                    })
+
+                                 
+                               
                                 })
 
 
@@ -116,6 +131,8 @@ export class Footer extends React.Component<IFooterProps> {
 
                 camScreen.dispose()
                 camScreen2.dispose()
+
+               
 
             }, 50);
 
@@ -292,7 +309,13 @@ export class Footer extends React.Component<IFooterProps> {
                         activeEntry={() => this.props.globalState.resizeValue}
                         onOptionPicked={(option) => this.defineResize(option)}
                         enabled={true}
-                        
+                    />
+                                        <FooterButton
+                        globalState={this.props.globalState}
+                        icon={iconCameras}
+                        label="Screenshot"
+                        onClick={() => this.makeScreenshot()}
+                        enabled={!!this.props.globalState.currentScene}
                     />
                 </div>
             </div>
