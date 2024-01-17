@@ -52,6 +52,7 @@ export async function compareImages(src1: string, src2: string): Promise<IpmResu
 
     const pm = pixelmatch(i1.data, i2.data, diff.data, canvas1.width, canvas1.height, {
         threshold: 0.1,
+        includeAA: true,
         diffMask: true, //??
     });
 

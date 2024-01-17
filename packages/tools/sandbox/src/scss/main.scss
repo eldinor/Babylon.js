@@ -8,7 +8,7 @@ html {
     --button-hover-background: #162d3a;
     --font-size: 20px;
     --active-font-size: 22px;
-    --header-height:70px;
+    --header-height: 70px;
     --header-background: #3b09e0;
 }
 
@@ -92,7 +92,7 @@ body,
         cursor: pointer;
         background: transparent;
         border: 0;
-     //   -webkit-appearance: none;
+        //   -webkit-appearance: none;
         color: #000;
         text-shadow: 0 1px 0 #fff;
         opacity: 0.4;
@@ -114,31 +114,50 @@ body,
     z-index: 9999;
     text-align: center;
     border-radius: 10%;
-    border: #FFF solid 1px;
-
+    border: #fff solid 1px;
 }
 
-#topBar{
+#topBar {
     position: absolute;
     margin: 0;
     padding: 2px;
     width: 100%;
     z-index: 1000;
-  }
+}
 
 .row {
     display: flex;
     z-index: 1000;
     background: #162d3a;
     opacity: 0.6;
-  
-  }
-  
-  .column {
+}
+
+.column {
     flex: 50%;
     color: antiquewhite;
     padding: 5px;
-  }
+}
+
+#settings-container {
+    position: absolute;
+    width: 100%;
+    min-height: 200px;
+    margin: 0;
+    padding: 0;
+    background-color: #7baaa483;
+    bottom: 70px;
+    z-index: 99;
+    display: none;
+    pointer-events: none;
+}
+
+#settings {
+    width: 30%;
+    margin: 0 auto;
+    background: #45aeeb;
+    min-height: 200px;
+    pointer-events: all;
+}
 
 @media (max-width: 768px) {
     html {

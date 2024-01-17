@@ -19,6 +19,7 @@ import iconVariants from "../img/icon-variants.svg";
 import iconDownload from "../img/icon-download.svg";
 import iconSkybox from "../img/icon-skybox.svg";
 import iconFullScreen  from "../../Assets/icon_Fullscreen.svg"
+
 import { compareImages } from "../tools/compareImages";
 import { Tools } from "core/Misc/tools";
 import { Layer } from "core/Layers/layer";
@@ -150,10 +151,20 @@ export class Footer extends React.Component<IFooterProps> {
 
      //   console.log(this.resizeOptions.indexOf(option))
         localStorage.setItem('resizeValue', option)
-        
-        
     }
     //
+
+openSettings(){
+    console.log("DONE!!!!!!!!!!!!!!!!")
+    
+
+    var yourUl = document.getElementById("settings-container")!;
+    yourUl.style.display = yourUl.style.display === 'initial' ? '' : 'initial';
+
+   
+}
+
+    
     //
     switchCamera(index: number) {
         const camera = this.props.globalState.currentScene!.cameras[index];
@@ -316,6 +327,14 @@ export class Footer extends React.Component<IFooterProps> {
                         label="Screenshot"
                         onClick={() => this.makeScreenshot()}
                         enabled={!!this.props.globalState.currentScene}
+                    />
+
+<FooterButton
+                        globalState={this.props.globalState}
+                        icon={iconVariants}
+                        label="Settings"
+                        onClick={() => this.openSettings()}
+                        enabled={true}
                     />
                 </div>
             </div>

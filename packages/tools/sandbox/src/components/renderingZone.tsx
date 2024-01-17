@@ -24,14 +24,16 @@ import { PBRMaterial } from "core/Materials/PBR/pbrMaterial";
 //
 import { WebIO, Logger } from "@gltf-transform/core";
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
-
+//@ts-ignore
 import { MeshoptEncoder, MeshoptSimplifier } from "meshoptimizer";
 
 // import {DracoDecoderModule} from "draco3dgltf";
-
+//@ts-ignore
 import { inspect, textureCompress, dedup, join, weld, prune, resample, instance, quantize, reorder, simplify } from "@gltf-transform/functions";
 import { Viewport } from "core/Maths/math.viewport";
 // import { compareImages } from "../tools/compareImages";
+
+import { Pane } from "tweakpane";
 
 function isTextureAsset(name: string): boolean {
     const queryStringIndex = name.indexOf("?");
@@ -96,6 +98,8 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         this._engine.loadingUIBackgroundColor = "#2A2342";
 
+        function parseBool(val:any) { return val === true || val === "true" }
+
         const getResizeValue = localStorage.getItem("resizeValue");
 
         if (getResizeValue) {
@@ -105,6 +109,39 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         }
 
         console.log("getResizeValue", getResizeValue);
+
+        const getDedupState = localStorage.getItem("dedupState");
+        console.log(getDedupState)
+
+        if (getDedupState) {
+            this.props.globalState.dedupState = parseBool(getDedupState)
+
+            console.log('parsed from Local Storage, dedupState is', this.props.globalState.dedupState)
+        } 
+
+        console.log('Default dedup should be true', this.props.globalState.dedupState)
+
+//
+
+const getPruneState = localStorage.getItem("pruneState");
+        console.log('getPruneState', getPruneState)
+
+        if (getPruneState) {
+            this.props.globalState.pruneState = parseBool(getPruneState)
+
+            console.log('parsed from Local Storage, pruneState is', this.props.globalState.pruneState)
+        } 
+
+        console.log('Default PRUNE should be TRUE', this.props.globalState.pruneState)
+
+
+
+
+        //
+
+        //
+
+
 
         // Resize
         window.addEventListener("resize", () => {
@@ -385,31 +422,81 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         console.log(inspect(doc));
 
         await MeshoptEncoder.ready;
+        //
+        //
+        // PANE
 
+        const pane = new Pane({ container: document.getElementById("settings")! });
+
+        this._scene.onDispose = () => {
+            pane.dispose();
+        };
+
+
+        const dedupPane = pane.addBinding({ Dedup: this.props.globalState.dedupState }, "Dedup",{
+            label: 'Dedup',
+          });
+
+        dedupPane.on("change", (ev) => {
+            console.log(ev.value);
+            this.props.globalState.dedupState = ev.value;
+            localStorage.setItem("dedupState", ev.value.toString());
+        });
+
+        const prunePane  = pane.addBinding({ Prune: this.props.globalState.pruneState }, "Prune", {
+            label: 'Prune',
+          });
+
+          prunePane.on("change", (ev) => {
+            console.log('prunePane ', ev.value);
+            this.props.globalState.pruneState = ev.value;
+            localStorage.setItem("pruneState", ev.value.toString());
+        });
+
+
+
+
+          //
+          //
+
+        const transformsArray = [];
+
+        if (this.props.globalState.dedupState) {
+            transformsArray.push(dedup());
+        }
+
+        if (this.props.globalState.pruneState) {
+            transformsArray.push(prune());
+        }
+
+        console.log(transformsArray);
+        //
+        //
         if (this.props.globalState.resizeValue == undefined || this.props.globalState.resizeValue == "No Resize") {
             console.log("UNDEFINED | NO RESIZE");
-
+            console.log("dedup ", this.props.globalState.dedupState);
             await doc.transform(
-                dedup(),
+                //   dedup(),
+
+                ...transformsArray
 
                 //   weld({ tolerance: 0.001, toleranceNormal: 0.5 }),
                 //
-                prune(),
-                resample(),
-                join({ keepMeshes: false, keepNamed: false }),
-                backfaceCulling({ cull: false }),
-                weld({ tolerance: 0.001, toleranceNormal: 0.5 }),
-           
+                //     prune(),
+                //    resample(),
+                //    join({ keepMeshes: false, keepNamed: false }),
+                //    backfaceCulling({ cull: false }),
+                //    weld({ tolerance: 0.001, toleranceNormal: 0.5 }),
 
-                reorder({ encoder: MeshoptEncoder }),
-              quantize(),
+                //     reorder({ encoder: MeshoptEncoder }),
+                //   quantize(),
 
-             simplify({ simplifier: MeshoptSimplifier, ratio: 0.75, error: 0.001 }),
-                instance({ min: 2 }),
-                 //  textureCompress({
-                 //   targetFormat: "webp",
+                //   simplify({ simplifier: MeshoptSimplifier, ratio: 0.75, error: 0.001 }),
+                //   instance({ min: 2 }),
+                //  textureCompress({
+                //   targetFormat: "webp",
                 //, resize: [1024, 1024]
-             //   })
+                //   })
             );
         } else {
             await doc.transform(
@@ -426,7 +513,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 })
             );
         }
-
+        //@ts-ignore
         function backfaceCulling(options: any) {
             return (doc: any) => {
                 for (const material of doc.getRoot().listMaterials()) {

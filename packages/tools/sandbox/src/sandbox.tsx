@@ -197,14 +197,24 @@ export class Sandbox extends React.Component<ISandboxProps, { isFooterVisible: b
         return (
             <div id="root">
                 <div id="topBar">
-      <div className="row">
-        <div className="column"  id="topLeft">Original Size</div>
-        <div className="column" id="topRight">Converted Size</div>
-      </div>
-      </div>
+                    <div className="row">
+                        <div className="column" id="topLeft">
+                            Original Size
+                        </div>
+                        <div className="column" id="topRight">
+                            Converted Size
+                        </div>
+                    </div>
+                </div>
+                <div id="settings-container">
+                    <div id="settings"><h4>Optimization Settings</h4></div>
+                </div>
+
                 <span>
                     <p id="droptext" ref={this._dropTextRef}>
-                    {this._globalState.reflector ? "" : "Drag and drop uncompressed GLTF or GLB files to convert and export them as GLB with WEBP textures (obj and babylon files should be converted to GLB format)"}
+                        {this._globalState.reflector
+                            ? ""
+                            : "Drag and drop uncompressed GLTF or GLB files to convert and export them as GLB with WEBP textures (obj and babylon files should be converted to GLB format)"}
                     </p>
                     {this._globalState.reflector ? (
                         <ReflectorZone globalState={this._globalState} expanded={!this.state.isFooterVisible} />

@@ -29,6 +29,10 @@ export class GlobalState {
 
     public resizeValue: string;
 
+    public dedupState: boolean = true;
+
+    public pruneState: boolean = true;
+
     public showDebugLayer() {
         this.isDebugLayerEnabled = true;
         if (this.currentScene) {
