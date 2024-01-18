@@ -28,10 +28,21 @@ export class GlobalState {
     public origFilename: string;
 
     public resizeValue: string;
+    public textureValue: string;
 
     public dedupState: boolean = true;
 
     public pruneState: boolean = true;
+
+    public joinState: boolean = true;
+
+    public flattenState: boolean = false;
+
+    public weldState: boolean = true;
+    public weldTolerance: number = 0.001;
+    public weldToleranceNormal: number = 0.5;
+
+    public simplifyState: boolean = true;
 
     public showDebugLayer() {
         this.isDebugLayerEnabled = true;

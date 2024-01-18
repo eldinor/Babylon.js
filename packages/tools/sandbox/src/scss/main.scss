@@ -120,9 +120,10 @@ body,
 #topBar {
     position: absolute;
     margin: 0;
-    padding: 2px;
+   padding-left: 5px;
     width: 100%;
     z-index: 1000;
+    pointer-events: none;
 }
 
 .row {
@@ -144,7 +145,7 @@ body,
     min-height: 200px;
     margin: 0;
     padding: 0;
-    background-color: #7baaa483;
+   // background-color: #7baaa483;
     bottom: 70px;
     z-index: 99;
     display: none;
@@ -154,9 +155,18 @@ body,
 #settings {
     width: 30%;
     margin: 0 auto;
-    background: #45aeeb;
+//    background: #45aeeb;
     min-height: 200px;
     pointer-events: all;
+}
+
+#topInfo {
+    width: 50vw;
+    background: #3b09e0;
+    color: #FFF;
+    margin: 0 auto;
+    padding: 4px 10px 4px 10px;
+    display: none;
 }
 
 @media (max-width: 768px) {

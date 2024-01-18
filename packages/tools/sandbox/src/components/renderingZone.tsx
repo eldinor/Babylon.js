@@ -29,7 +29,7 @@ import { MeshoptEncoder, MeshoptSimplifier } from "meshoptimizer";
 
 // import {DracoDecoderModule} from "draco3dgltf";
 //@ts-ignore
-import { inspect, textureCompress, dedup, join, weld, prune, resample, instance, quantize, reorder, simplify } from "@gltf-transform/functions";
+import { inspect, textureCompress, dedup, join, weld, prune, resample, instance, quantize, reorder, simplify, flatten, meshopt } from "@gltf-transform/functions";
 import { Viewport } from "core/Maths/math.viewport";
 // import { compareImages } from "../tools/compareImages";
 
@@ -67,6 +67,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
     private _canvas: HTMLCanvasElement;
     private _originBlob: Blob;
     // private _originFilename: string;
+    private errorNum: number;
 
     public constructor(props: IRenderingZoneProps) {
         super(props);
@@ -98,7 +99,14 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         this._engine.loadingUIBackgroundColor = "#2A2342";
 
-        function parseBool(val:any) { return val === true || val === "true" }
+        //
+        //
+
+        //  Prepare optimization props
+        function parseBool(val: any) {
+            return val === true || val === "true";
+        }
+        //
 
         const getResizeValue = localStorage.getItem("resizeValue");
 
@@ -109,39 +117,122 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         }
 
         console.log("getResizeValue", getResizeValue);
+//
+        const getTextureValue = localStorage.getItem("textureValue");
 
-        const getDedupState = localStorage.getItem("dedupState");
-        console.log(getDedupState)
+        if (getTextureValue) {
+            this.props.globalState.textureValue = getTextureValue;
+        } else {
+            this.props.globalState.textureValue = "Keep Original";
+        }
 
-        if (getDedupState) {
-            this.props.globalState.dedupState = parseBool(getDedupState)
 
-            console.log('parsed from Local Storage, dedupState is', this.props.globalState.dedupState)
-        } 
-
-        console.log('Default dedup should be true', this.props.globalState.dedupState)
 
 //
+        const getDedupState = localStorage.getItem("dedupState");
+        console.log(getDedupState);
 
-const getPruneState = localStorage.getItem("pruneState");
-        console.log('getPruneState', getPruneState)
+        if (getDedupState) {
+            this.props.globalState.dedupState = parseBool(getDedupState);
+
+            console.log("parsed from Local Storage, dedupState is", this.props.globalState.dedupState);
+        }
+
+        console.log("Default dedup should be true", this.props.globalState.dedupState);
+
+        //
+
+        const getPruneState = localStorage.getItem("pruneState");
+        console.log("getPruneState", getPruneState);
 
         if (getPruneState) {
-            this.props.globalState.pruneState = parseBool(getPruneState)
+            this.props.globalState.pruneState = parseBool(getPruneState);
 
-            console.log('parsed from Local Storage, pruneState is', this.props.globalState.pruneState)
-        } 
+            console.log("parsed from Local Storage, pruneState is", this.props.globalState.pruneState);
+        }
 
-        console.log('Default PRUNE should be TRUE', this.props.globalState.pruneState)
+        console.log("No stored PRUNE value found", this.props.globalState.pruneState);
 
+        // end prune
+
+        const getFlattenState = localStorage.getItem("flattenState");
+        console.log("getFlattenState", getFlattenState);
+
+        if (getFlattenState) {
+            this.props.globalState.flattenState = parseBool(getFlattenState);
+
+            console.log("parsed from Local Storage, flattenState is", this.props.globalState.flattenState);
+        }
+
+        console.log("No stored FLATTEN value found", this.props.globalState.flattenState);
+        //
+        //
+        const getJoinState = localStorage.getItem("joinState");
+        console.log("getJoinState", getJoinState);
+
+        if (getJoinState) {
+            this.props.globalState.joinState = parseBool(getJoinState);
+
+            console.log("parsed from Local Storage, joinState is", this.props.globalState.joinState);
+        }
+
+        console.log("No stored JOIN value found", this.props.globalState.joinState);
+
+        //
+        const getWeldState = localStorage.getItem("weldState");
+        console.log("getWeldState", getWeldState);
+
+        if (getWeldState) {
+            this.props.globalState.weldState = parseBool(getWeldState);
+
+            console.log("parsed from Local Storage, flattenState is", this.props.globalState.weldState);
+        }
+
+        console.log("No stored WELD State value found", this.props.globalState.weldState);
+
+        //
+        const getWeldTolerance = localStorage.getItem("weldTolerance");
+        console.log("getWeldTolerance", getWeldTolerance);
+
+        if (getWeldTolerance) {
+            this.props.globalState.weldTolerance = Number(getWeldTolerance);
+
+            console.log("parsed from Local Storage, weldTolerance is", this.props.globalState.weldTolerance);
+        }
+
+        console.log("No stored getWeldTolerance value found", this.props.globalState.weldTolerance);
+        //
+
+        const getWeldToleranceNormal = localStorage.getItem("weldToleranceNormal");
+        console.log("getWeldToleranceNormal", getWeldToleranceNormal);
+
+        if (getWeldToleranceNormal) {
+            this.props.globalState.weldToleranceNormal = Number(getWeldToleranceNormal);
+
+            console.log("parsed from Local Storage, weldTolerance is", this.props.globalState.weldToleranceNormal);
+        }
+        else {
+            console.log("No stored getWeldTolerance value found", this.props.globalState.weldToleranceNormal);
+
+        }
+
+        //
+        const getSimplifyState = localStorage.getItem("simplifyState");
+        console.log("getSimplifyState", getSimplifyState);
+
+        if (getSimplifyState) {
+            this.props.globalState.simplifyState = parseBool(getSimplifyState);
+
+            console.log("parsed from Local Storage, pruneState is", this.props.globalState.simplifyState);
+        }
+
+        console.log("No stored SIMPLIFY state found", this.props.globalState.simplifyState);
+
+        // end prune
 
 
 
         //
-
-        //
-
-
 
         // Resize
         window.addEventListener("resize", () => {
@@ -421,6 +512,10 @@ const getPruneState = localStorage.getItem("pruneState");
 
         console.log(inspect(doc));
 
+       console.log( doc.getRoot().getAsset())
+
+ 
+
         await MeshoptEncoder.ready;
         //
         //
@@ -432,10 +527,13 @@ const getPruneState = localStorage.getItem("pruneState");
             pane.dispose();
         };
 
-
-        const dedupPane = pane.addBinding({ Dedup: this.props.globalState.dedupState }, "Dedup",{
-            label: 'Dedup',
+        const f0 = pane.addFolder({
+            title: 'Basic Optimization',
           });
+
+        const dedupPane = f0.addBinding({ Dedup: this.props.globalState.dedupState }, "Dedup", {
+            label: "Dedup",
+        });
 
         dedupPane.on("change", (ev) => {
             console.log(ev.value);
@@ -443,21 +541,93 @@ const getPruneState = localStorage.getItem("pruneState");
             localStorage.setItem("dedupState", ev.value.toString());
         });
 
-        const prunePane  = pane.addBinding({ Prune: this.props.globalState.pruneState }, "Prune", {
-            label: 'Prune',
-          });
+        const prunePane = f0.addBinding({ Prune: this.props.globalState.pruneState }, "Prune", {
+            label: "Prune",
+        });
 
-          prunePane.on("change", (ev) => {
-            console.log('prunePane ', ev.value);
+        prunePane.on("change", (ev) => {
+            console.log("prunePane ", ev.value);
             this.props.globalState.pruneState = ev.value;
             localStorage.setItem("pruneState", ev.value.toString());
+        });
+
+        const flattenPane = f0.addBinding({ Flatten: this.props.globalState.flattenState }, "Flatten", {
+            label: "Flatten",
+        });
+
+        flattenPane.on("change", (ev) => {
+            console.log("flattenPane ", ev.value);
+            this.props.globalState.flattenState = ev.value;
+            localStorage.setItem("flattenState", ev.value.toString());
+        });
+
+        const joinPane = f0.addBinding({ Join: this.props.globalState.joinState }, "Join", {
+            label: "Join",
+        });
+
+        joinPane.on("change", (ev) => {
+            console.log("joinPane ", ev.value);
+            this.props.globalState.joinState = ev.value;
+            localStorage.setItem("joinState", ev.value.toString());
+        });
+
+        pane.addBlade({
+            view: "separator",
+        });
+        const weldPane = f0.addBinding({ Weld: this.props.globalState.weldState }, "Weld", {
+            label: "Weld",
+        });
+
+        weldPane.on("change", (ev) => {
+            console.log("weldPane ", ev.value);
+            this.props.globalState.weldState = ev.value;
+            localStorage.setItem("weldState", ev.value.toString());
+        });
+
+        const weldTolerancePane = f0.addBinding({ Tolerance: this.props.globalState.weldTolerance }, "Tolerance", {
+            label: "Tolerance | Default 0.001",
+            format: (v) => v.toFixed(3),
+        });
+
+        weldTolerancePane.on("change", (ev) => {
+            console.log("weldTolerancePane ", ev.value);
+            this.props.globalState.weldTolerance = ev.value;
+            localStorage.setItem("weldTolerance", ev.value.toString());
+        });
+
+        const weldToleranceNormalPane = f0.addBinding({ ToleranceNormal: this.props.globalState.weldToleranceNormal }, "ToleranceNormal", {
+            label: "Tolerance Normal| Default 0.5",
+            format: (v) => v.toFixed(2),
+        });
+
+        weldToleranceNormalPane.on("change", (ev) => {
+            console.log("weldToleranceNormalPane ", ev.value);
+            this.props.globalState.weldToleranceNormal = ev.value;
+            localStorage.setItem("", ev.value.toString());
+        });
+
+        //
+        //
+        const f1 = pane.addFolder({
+            title: 'KHR Extensions',
+          });
+
+        const simplifyPane = f1.addBinding({ Simplify: this.props.globalState.simplifyState }, "Simplify", {
+            label: "Simplify | MeshoptSimplifier",
+        });
+
+        simplifyPane.on("change", (ev) => {
+            console.log("simplifyPane ", ev.value);
+            this.props.globalState.simplifyState = ev.value;
+            localStorage.setItem("simplifyState", ev.value.toString());
         });
 
 
 
 
-          //
-          //
+        //
+
+        //
 
         const transformsArray = [];
 
@@ -467,6 +637,21 @@ const getPruneState = localStorage.getItem("pruneState");
 
         if (this.props.globalState.pruneState) {
             transformsArray.push(prune());
+        }
+
+        if (this.props.globalState.flattenState) {
+            transformsArray.push(flatten());
+        }
+        if (this.props.globalState.joinState) {
+            transformsArray.push(join());
+        }
+
+        if (this.props.globalState.weldState) {
+            transformsArray.push(weld({ exhaustive: false, tolerance: this.props.globalState.weldTolerance, toleranceNormal: this.props.globalState.weldToleranceNormal }));
+        }
+
+        if (this.props.globalState.simplifyState) {
+            transformsArray.push(simplify({ simplifier: MeshoptSimplifier, ratio: 0.75, error: 0.001 }));
         }
 
         console.log(transformsArray);
@@ -489,7 +674,7 @@ const getPruneState = localStorage.getItem("pruneState");
                 //    weld({ tolerance: 0.001, toleranceNormal: 0.5 }),
 
                 //     reorder({ encoder: MeshoptEncoder }),
-                //   quantize(),
+                  //      meshopt({encoder: MeshoptEncoder, level: 'medium'})
 
                 //   simplify({ simplifier: MeshoptSimplifier, ratio: 0.75, error: 0.001 }),
                 //   instance({ min: 2 }),
@@ -705,8 +890,26 @@ const getPruneState = localStorage.getItem("pruneState");
                 loader.onValidatedObservable.add((results) => {
                     if (results.issues.numErrors > 0) {
                         this.props.globalState.showDebugLayer();
+                        this.errorNum = results.issues.numErrors
+                        console.log(results.issues)
+                        console.log(results.info)
+                        console.log(results)
+                        console.log('errorNum ', this.errorNum)
+                        document.getElementById('topInfo')!.style.display = "block"
+                        document.getElementById('topInfo')!.innerHTML = "Found <strong>" + this.errorNum + "</strong> validation errors." +"<br/>" + "Hope to correct..."
+                        document.getElementById('topInfo')!.innerHTML += "<br/><small>"+ "Click Inspector button to toggle Inspector.</small>";
+
+                        
+                        setTimeout(() => {
+                            document.getElementById('topInfo')!.style.display = "none"
+                        }, 3000);
                     }
                 });
+
+                loader.onParsedObservable.add(gltfBabylon => {
+                    console.log(gltfBabylon.json);
+                   // console.log(JSON.stringify(manifest));
+                })
             }
         });
 

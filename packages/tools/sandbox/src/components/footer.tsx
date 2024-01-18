@@ -18,7 +18,8 @@ import iconCameras from "../img/icon-cameras.svg";
 import iconVariants from "../img/icon-variants.svg";
 import iconDownload from "../img/icon-download.svg";
 import iconSkybox from "../img/icon-skybox.svg";
-import iconFullScreen  from "../../Assets/icon_Fullscreen.svg"
+import iconFullScreen from "../../Assets/icon_Fullscreen.svg";
+import iconTex from "../../Assets/Icon_EditModel.svg";
 
 import { compareImages } from "../tools/compareImages";
 import { Tools } from "core/Misc/tools";
@@ -31,6 +32,7 @@ interface IFooterProps {
 export class Footer extends React.Component<IFooterProps> {
     private _cameraNames: string[] = [];
     public resizeOptions: string[] = ["No Resize", "2048", "1024", "512", "256"];
+    public textureOptions: string[] = ["Keep Original", "WEBP", "PNG", "JPG"];
 
     public constructor(props: IFooterProps) {
         super(props);
@@ -65,106 +67,95 @@ export class Footer extends React.Component<IFooterProps> {
     //
 
     makeScreenshot() {
-        console.log("Screenshot")
+        console.log("Screenshot");
 
         this.props.globalState.currentScene.executeWhenReady(() => {
-
             const camScreen = this.props.globalState.currentScene.getCameraByName("default camera")!.clone("camScreen");
 
             const camScreen2 = this.props.globalState.currentScene.getCameraByName("camera2")!.clone("camScreen");
 
-
-
-            this.props.globalState.skybox = false
+            this.props.globalState.skybox = false;
 
             setTimeout(() => {
+                Tools.CreateScreenshotUsingRenderTargetAsync(this.props.globalState.currentScene.getEngine(), camScreen, {
+                    width: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.width,
+                    height: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.height,
+                }).then((base64Data) => {
+                    const linkSource = base64Data;
+                    const downloadLink = document.createElement("a");
+                    downloadLink.href = linkSource;
+                    downloadLink.download = "test.png";
+                    //   downloadLink.click();
 
+                    console.log(base64Data);
 
-
-
-                Tools.CreateScreenshotUsingRenderTargetAsync(this.props.globalState.currentScene.getEngine(),
-                    camScreen, { width: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.width, height: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.height }).then((base64Data) => {
-                        const linkSource = base64Data;
+                    Tools.CreateScreenshotUsingRenderTargetAsync(this.props.globalState.currentScene.getEngine(), camScreen2, {
+                        width: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.width,
+                        height: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.height,
+                    }).then((base64Data2) => {
+                        const linkSource = base64Data2;
                         const downloadLink = document.createElement("a");
                         downloadLink.href = linkSource;
-                        downloadLink.download = "test.png";
-                        //   downloadLink.click();
+                        downloadLink.download = "cam2.png";
+                        //    downloadLink.click();
+                        //
 
-                        console.log(base64Data);
+                        compareImages(base64Data, base64Data2).then((res) => {
+                            console.log(res);
+                            const downloadLink = document.createElement("a");
+                            downloadLink.href = res.dataURL;
 
-                        Tools.CreateScreenshotUsingRenderTargetAsync(this.props.globalState.currentScene.getEngine(),
-                            camScreen2, { width: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.width, height: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.height }).then((base64Data2) => {
-                                const linkSource = base64Data2;
-                                const downloadLink = document.createElement("a");
-                                downloadLink.href = linkSource;
-                                downloadLink.download = "cam2.png";
-                                //    downloadLink.click();
-                                //
+                            downloadLink.download = "dataURL.png";
+                            //    downloadLink.click();
+                            //@ts-ignore
+                            let screenLayer = new Layer("screenLayer", res.dataURL, this.props.globalState.currentScene, false);
+                            console.log(screenLayer);
 
-                                compareImages(base64Data, base64Data2).then((res) => {
-                                    console.log(res)
-                                    const downloadLink = document.createElement("a");
-                                    downloadLink.href = res.dataURL;
-
-                                    downloadLink.download = "dataURL.png";
-                                    //    downloadLink.click();
-                                    //@ts-ignore
-                                    let screenLayer = new Layer('screenLayer',res.dataURL,this.props.globalState.currentScene,false)
-                                    console.log(screenLayer)
-
-                                    this.props.globalState.currentScene.onPointerObservable.addOnce(function(){
-                                        setTimeout(() => {
-                                            screenLayer.dispose()
-                                        }, 3000);
-
-                                    })
-
-                                 
-                               
-                                })
-
-
-
-                                //
-
+                            this.props.globalState.currentScene.onPointerObservable.addOnce(function () {
+                                setTimeout(() => {
+                                    screenLayer.dispose();
+                                }, 3000);
                             });
+                        });
+
+                        //
                     });
+                });
 
-                camScreen.dispose()
-                camScreen2.dispose()
-
-               
-
+                camScreen.dispose();
+                camScreen2.dispose();
             }, 50);
-
-
-
-        })
-
+        });
     }
     //
     //
 
     defineResize(option: string) {
         console.log(option);
-        this.props.globalState.resizeValue = option
+        this.props.globalState.resizeValue = option;
 
-     //   console.log(this.resizeOptions.indexOf(option))
-        localStorage.setItem('resizeValue', option)
+        //   console.log(this.resizeOptions.indexOf(option))
+        localStorage.setItem("resizeValue", option);
     }
     //
 
-openSettings(){
-    console.log("DONE!!!!!!!!!!!!!!!!")
-    
+    openSettings() {
+        console.log("settingsContainer opened");
 
-    var yourUl = document.getElementById("settings-container")!;
-    yourUl.style.display = yourUl.style.display === 'initial' ? '' : 'initial';
+        const settingsContainer = document.getElementById("settings-container")!;
+        settingsContainer.style.display = settingsContainer.style.display === "initial" ? "" : "initial";
+    }
+//
 
-   
+defineTextureFormat(option: string) {
+    console.log(option);
+    this.props.globalState.textureValue = option;
+
+    //   console.log(this.resizeOptions.indexOf(option))
+    localStorage.setItem("textureValue", option);
 }
 
-    
+
     //
     switchCamera(index: number) {
         const camera = this.props.globalState.currentScene!.cameras[index];
@@ -194,7 +185,7 @@ openSettings(){
         let hasVariants = false;
         let activeEntry = () => "";
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        let switchVariant = (name: string, index: number) => { };
+        let switchVariant = (name: string, index: number) => {};
         const variantExtension = this._getVariantsExtension();
         if (variantExtension && this.props.globalState.currentScene) {
             const scene = this.props.globalState.currentScene;
@@ -321,7 +312,7 @@ openSettings(){
                         onOptionPicked={(option) => this.defineResize(option)}
                         enabled={true}
                     />
-                                        <FooterButton
+                    <FooterButton
                         globalState={this.props.globalState}
                         icon={iconCameras}
                         label="Screenshot"
@@ -329,11 +320,15 @@ openSettings(){
                         enabled={!!this.props.globalState.currentScene}
                     />
 
-<FooterButton
+                    <FooterButton globalState={this.props.globalState} icon={iconVariants} label="Settings" onClick={() => this.openSettings()} enabled={true} />
+
+                    <DropUpButton
                         globalState={this.props.globalState}
-                        icon={iconVariants}
-                        label="Settings"
-                        onClick={() => this.openSettings()}
+                        icon={iconTex}
+                        label="Texture Format"
+                        options={this.textureOptions}
+                        activeEntry={() => this.props.globalState.textureValue}
+                        onOptionPicked={(option) =>  this.defineTextureFormat(option)}
                         enabled={true}
                     />
                 </div>

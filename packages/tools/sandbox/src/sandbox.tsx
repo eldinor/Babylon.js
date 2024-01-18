@@ -205,9 +205,11 @@ export class Sandbox extends React.Component<ISandboxProps, { isFooterVisible: b
                             Converted Size
                         </div>
                     </div>
+                    <div id="topInfo">
+                    </div>
                 </div>
                 <div id="settings-container">
-                    <div id="settings"><h4>Optimization Settings</h4></div>
+                    <div id="settings"></div>
                 </div>
 
                 <span>
