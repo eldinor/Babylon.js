@@ -571,7 +571,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             localStorage.setItem("joinState", ev.value.toString());
         });
 
-        pane.addBlade({
+        f0.addBlade({
             view: "separator",
         });
         const weldPane = f0.addBinding({ Weld: this.props.globalState.weldState }, "Weld", {
@@ -603,7 +603,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         weldToleranceNormalPane.on("change", (ev) => {
             console.log("weldToleranceNormalPane ", ev.value);
             this.props.globalState.weldToleranceNormal = ev.value;
-            localStorage.setItem("", ev.value.toString());
+            localStorage.setItem("weldToleranceNormal", ev.value.toString());
         });
 
         //
@@ -718,7 +718,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         this.props.globalState.optURL = assetUrl;
 
         document.getElementById("topRight")!.innerHTML =
-            "With WEBP Textures: <strong>" + (glb.length / (1024 * 1024)).toFixed(2).toString() + " Mb</strong> / Resize: " + this.props.globalState.resizeValue;
+            "Optimized: <strong>" + (glb.length / (1024 * 1024)).toFixed(2).toString() + " Mb</strong> | Resize: <strong>" + this.props.globalState.resizeValue + "</strong> | Texture: <strong>" + this.props.globalState.textureValue +"</strong>";
 
         //  console.log(this.props.globalState.optURL)
 

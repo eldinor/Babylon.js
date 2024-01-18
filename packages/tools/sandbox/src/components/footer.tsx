@@ -32,7 +32,7 @@ interface IFooterProps {
 export class Footer extends React.Component<IFooterProps> {
     private _cameraNames: string[] = [];
     public resizeOptions: string[] = ["No Resize", "2048", "1024", "512", "256"];
-    public textureOptions: string[] = ["Keep Original", "WEBP", "PNG", "JPG"];
+    public textureOptions: string[] = ["Keep Original", "webp", "png", "jpg"];
 
     public constructor(props: IFooterProps) {
         super(props);
@@ -78,7 +78,7 @@ export class Footer extends React.Component<IFooterProps> {
 
             setTimeout(() => {
                 Tools.CreateScreenshotUsingRenderTargetAsync(this.props.globalState.currentScene.getEngine(), camScreen, {
-                    width: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.width,
+                    width: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.width/2,
                     height: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.height,
                 }).then((base64Data) => {
                     const linkSource = base64Data;
@@ -90,7 +90,7 @@ export class Footer extends React.Component<IFooterProps> {
                     console.log(base64Data);
 
                     Tools.CreateScreenshotUsingRenderTargetAsync(this.props.globalState.currentScene.getEngine(), camScreen2, {
-                        width: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.width,
+                        width: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.width/2,
                         height: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.height,
                     }).then((base64Data2) => {
                         const linkSource = base64Data2;
@@ -102,6 +102,13 @@ export class Footer extends React.Component<IFooterProps> {
 
                         compareImages(base64Data, base64Data2).then((res) => {
                             console.log(res);
+
+                            document.getElementById("topInfo")!.style.display = "block";
+                            document.getElementById("topInfo")!.innerHTML = res.pm + " pixels mismatch, error " + res.error + "%";
+                            setTimeout(() => {
+                                document.getElementById('topInfo')!.style.display = "none"
+                            }, 3000);
+
                             const downloadLink = document.createElement("a");
                             downloadLink.href = res.dataURL;
 
@@ -109,6 +116,7 @@ export class Footer extends React.Component<IFooterProps> {
                             //    downloadLink.click();
                             //@ts-ignore
                             let screenLayer = new Layer("screenLayer", res.dataURL, this.props.globalState.currentScene, false);
+                            screenLayer.layerMask = 0x20000000;
                             console.log(screenLayer);
 
                             this.props.globalState.currentScene.onPointerObservable.addOnce(function () {
@@ -145,16 +153,15 @@ export class Footer extends React.Component<IFooterProps> {
         const settingsContainer = document.getElementById("settings-container")!;
         settingsContainer.style.display = settingsContainer.style.display === "initial" ? "" : "initial";
     }
-//
+    //
 
-defineTextureFormat(option: string) {
-    console.log(option);
-    this.props.globalState.textureValue = option;
+    defineTextureFormat(option: string) {
+        console.log(option);
+        this.props.globalState.textureValue = option;
 
-    //   console.log(this.resizeOptions.indexOf(option))
-    localStorage.setItem("textureValue", option);
-}
-
+        //   console.log(this.resizeOptions.indexOf(option))
+        localStorage.setItem("textureValue", option);
+    }
 
     //
     switchCamera(index: number) {
@@ -328,7 +335,7 @@ defineTextureFormat(option: string) {
                         label="Texture Format"
                         options={this.textureOptions}
                         activeEntry={() => this.props.globalState.textureValue}
-                        onOptionPicked={(option) =>  this.defineTextureFormat(option)}
+                        onOptionPicked={(option) => this.defineTextureFormat(option)}
                         enabled={true}
                     />
                 </div>
