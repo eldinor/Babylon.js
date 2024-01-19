@@ -338,6 +338,7 @@ export class Footer extends React.Component<IFooterProps> {
                         onOptionPicked={(option) => this.defineTextureFormat(option)}
                         enabled={true}
                     />
+
                 </div>
             </div>
         );

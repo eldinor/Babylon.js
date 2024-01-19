@@ -412,6 +412,8 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             camera.wheelDeltaPercentage = 0.01;
             camera.pinchDeltaPercentage = 0.01;
 
+            camera.lowerRadiusLimit = 1;
+
             camera.viewport = new Viewport(0, 0, 0.5, 1.0);
 
             const camera2 = camera.clone("camera2");
@@ -695,6 +697,20 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
         //
 
+
+        const f2 = pane.addFolder({
+            title: "Other",
+        });
+        const resetButton = f2.addButton({
+            title: "RESET",
+            label: "RESET ALL SETTINGS", // optional
+        });
+
+        resetButton.on("click", () => {
+            localStorage.clear();
+            location.reload();
+        });
+
         //
 
         const transformsArray = [];
@@ -772,10 +788,9 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         await doc.transform(
             //   dedup(),
 
-            ...transformsArray,
+            ...transformsArray
 
-      //   backfaceCulling({ cull: false })
-
+            //   backfaceCulling({ cull: false })
 
             //                quantize()
 
@@ -802,8 +817,8 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         function backfaceCulling(options: any) {
             return (doc: any) => {
                 for (const material of doc.getRoot().listMaterials()) {
-                    console.log(material)
-                    console.log(options.cull)
+                    console.log(material);
+                    console.log(options.cull);
                     material.setDoubleSided(!options.cull);
                 }
             };

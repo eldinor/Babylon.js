@@ -120,7 +120,7 @@ body,
 #topBar {
     position: absolute;
     margin: 0;
-   padding-left: 5px;
+    padding-left: 5px;
     width: 100%;
     z-index: 1000;
     pointer-events: none;
@@ -145,7 +145,7 @@ body,
     min-height: 200px;
     margin: 0;
     padding: 0;
-   // background-color: #7baaa483;
+    // background-color: #7baaa483;
     bottom: 70px;
     z-index: 99;
     display: none;
@@ -155,18 +155,57 @@ body,
 #settings {
     width: 30%;
     margin: 0 auto;
-//    background: #45aeeb;
-  //  min-height: 200px;
+    //    background: #45aeeb;
+    //  min-height: 200px;
     pointer-events: all;
 }
 
 #topInfo {
     width: 50vw;
     background: #3b09e0;
-    color: #FFF;
+    color: #fff;
     margin: 0 auto;
     padding: 4px 10px 4px 10px;
     display: none;
+}
+
+#help-container {
+    position: absolute;
+    width: 100%;
+   
+    margin: 0;
+    padding: 0;
+//    background-color: #7baaa483;
+    top: 25px;
+    z-index: 199;
+    pointer-events: none;
+     display: none;
+   
+}
+
+#help {
+    width: 55%;
+    margin: 0 auto;
+        background: #e7e9e4;
+    //  min-height: 200px;
+    padding-left: 10px;
+    padding-right: 10px;
+    pointer-events: all;
+}
+#help h1{ 
+    margin-block-start: 0.5em;
+    margin-block-end: -0.4em;
+    font-size:1.4em;
+}
+#help h2{ 
+    font-size:1.2em;
+    padding-bottom: 5px;
+    
+}
+
+#help p {
+    margin-block-start: -1em;
+    margin-block-end: -0.2em;
 }
 
 @media (max-width: 768px) {

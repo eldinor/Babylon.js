@@ -38,7 +38,7 @@ export class GlobalState {
 
     public resampleState: boolean = true;
 
-    public flattenState: boolean = false;
+    public flattenState: boolean = true;
 
     public weldState: boolean = true;
     public weldTolerance: number = 0.001;

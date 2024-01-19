@@ -208,6 +208,23 @@ export class Sandbox extends React.Component<ISandboxProps, { isFooterVisible: b
                     <div id="topInfo">
                     </div>
                 </div>
+                <div id="help-container">
+                <div id="help">
+                    <h1>Basic Optimization</h1>
+                <h2>Dedup</h2>
+                <p>Removes duplicate Accessor, Mesh, Texture, and Material properties.</p>
+                <small>Default: true</small>
+
+                <h2>Prune</h2>
+                <p>Removes properties from the file if they are not referenced by a Scene.</p>
+                <small>Default: true</small>
+
+                <h2>Flatten</h2>
+                <p>Flattens the scene graph, leaving Nodes with Meshes, Cameras, and other attachments as direct children of the Scene. Skeletons and their descendants are left in their original Node structure.</p>
+                <small>Default: true</small>
+
+                </div>
+                </div>
                 <div id="settings-container">
                     <div id="settings"></div>
                 </div>
