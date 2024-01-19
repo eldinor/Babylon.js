@@ -412,7 +412,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             camera.wheelDeltaPercentage = 0.01;
             camera.pinchDeltaPercentage = 0.01;
 
-            camera.lowerRadiusLimit = 1;
+       //     camera.lowerRadiusLimit = 1;
 
             camera.viewport = new Viewport(0, 0, 0.5, 1.0);
 
