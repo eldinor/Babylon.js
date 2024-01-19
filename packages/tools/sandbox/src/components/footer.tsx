@@ -32,7 +32,7 @@ interface IFooterProps {
 export class Footer extends React.Component<IFooterProps> {
     private _cameraNames: string[] = [];
     public resizeOptions: string[] = ["No Resize", "2048", "1024", "512", "256"];
-    public textureOptions: string[] = ["Keep Original", "webp", "png", "jpg"];
+    public textureOptions: string[] = ["Keep Original", "webp", "png"];
 
     public constructor(props: IFooterProps) {
         super(props);
@@ -322,12 +322,12 @@ export class Footer extends React.Component<IFooterProps> {
                     <FooterButton
                         globalState={this.props.globalState}
                         icon={iconCameras}
-                        label="Screenshot"
+                        label="Comparing Screenshot"
                         onClick={() => this.makeScreenshot()}
                         enabled={!!this.props.globalState.currentScene}
                     />
 
-                    <FooterButton globalState={this.props.globalState} icon={iconVariants} label="Settings" onClick={() => this.openSettings()} enabled={true} />
+                    <FooterButton globalState={this.props.globalState} icon={iconVariants} label="Settings" onClick={() => this.openSettings()} enabled={!!this.props.globalState.currentScene} />
 
                     <DropUpButton
                         globalState={this.props.globalState}

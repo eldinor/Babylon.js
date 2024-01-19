@@ -117,7 +117,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         }
 
         console.log("getResizeValue", getResizeValue);
-//
+        //
         const getTextureValue = localStorage.getItem("textureValue");
 
         if (getTextureValue) {
@@ -126,9 +126,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             this.props.globalState.textureValue = "Keep Original";
         }
 
-
-
-//
+        //
         const getDedupState = localStorage.getItem("dedupState");
         console.log(getDedupState);
 
@@ -177,7 +175,19 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         }
 
         console.log("No stored JOIN value found", this.props.globalState.joinState);
+        //
+        const getResampleState = localStorage.getItem("resampleState");
+        console.log("getResampleState", getResampleState);
 
+        if (getResampleState) {
+            this.props.globalState.resampleState = parseBool(getResampleState);
+
+            console.log("parsed from Local Storage, resampleState is", this.props.globalState.resampleState);
+        }
+
+        console.log("No stored resampleState  found", this.props.globalState.resampleState);
+
+        // end resampleState
         //
         const getWeldState = localStorage.getItem("weldState");
         console.log("getWeldState", getWeldState);
@@ -210,10 +220,8 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             this.props.globalState.weldToleranceNormal = Number(getWeldToleranceNormal);
 
             console.log("parsed from Local Storage, weldTolerance is", this.props.globalState.weldToleranceNormal);
-        }
-        else {
+        } else {
             console.log("No stored getWeldTolerance value found", this.props.globalState.weldToleranceNormal);
-
         }
 
         //
@@ -223,14 +231,38 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         if (getSimplifyState) {
             this.props.globalState.simplifyState = parseBool(getSimplifyState);
 
-            console.log("parsed from Local Storage, pruneState is", this.props.globalState.simplifyState);
+            console.log("parsed from Local Storage, SIMPLIFY State is", this.props.globalState.simplifyState);
         }
 
         console.log("No stored SIMPLIFY state found", this.props.globalState.simplifyState);
 
-        // end prune
+        // end SIMPLIFY
 
+        const getReorderState = localStorage.getItem("reorderState");
+        console.log("getReorderState", getReorderState);
 
+        if (getReorderState) {
+            this.props.globalState.reorderState = parseBool(getReorderState);
+
+            console.log("parsed from Local Storage, reorderState is", this.props.globalState.reorderState);
+        }
+
+        console.log("No stored reorderState  found", this.props.globalState.reorderState);
+
+        // end reorderState
+
+        const getQuantizeState = localStorage.getItem("quantizeState");
+        console.log("getQuantizeState", getQuantizeState);
+
+        if (getQuantizeState) {
+            this.props.globalState.quantizeState = parseBool(getQuantizeState);
+
+            console.log("parsed from Local Storage, pruneState is", this.props.globalState.quantizeState);
+        }
+
+        console.log("No stored Quantize state found", this.props.globalState.quantizeState);
+
+        // end Quantize
 
         //
 
@@ -512,9 +544,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         console.log(inspect(doc));
 
-       console.log( doc.getRoot().getAsset())
-
- 
+        console.log(doc.getRoot().getAsset());
 
         await MeshoptEncoder.ready;
         //
@@ -528,8 +558,8 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         };
 
         const f0 = pane.addFolder({
-            title: 'Basic Optimization',
-          });
+            title: "Basic Optimization",
+        });
 
         const dedupPane = f0.addBinding({ Dedup: this.props.globalState.dedupState }, "Dedup", {
             label: "Dedup",
@@ -570,7 +600,19 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             this.props.globalState.joinState = ev.value;
             localStorage.setItem("joinState", ev.value.toString());
         });
+        //
 
+        const resamplePane = f0.addBinding({ Resample: this.props.globalState.resampleState }, "Resample", {
+            label: "Resample Animations",
+        });
+
+        resamplePane.on("change", (ev) => {
+            console.log("resamplePane ", ev.value);
+            this.props.globalState.resampleState = ev.value;
+            localStorage.setItem("resampleState", ev.value.toString());
+        });
+
+        //
         f0.addBlade({
             view: "separator",
         });
@@ -596,7 +638,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         const weldToleranceNormalPane = f0.addBinding({ ToleranceNormal: this.props.globalState.weldToleranceNormal }, "ToleranceNormal", {
-            label: "Tolerance Normal| Default 0.5",
+            label: "Tolerance Normal| Default 0.25",
             format: (v) => v.toFixed(2),
         });
 
@@ -606,13 +648,11 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             localStorage.setItem("weldToleranceNormal", ev.value.toString());
         });
 
-        //
-        //
-        const f1 = pane.addFolder({
-            title: 'KHR Extensions',
-          });
+        f0.addBlade({
+            view: "separator",
+        });
 
-        const simplifyPane = f1.addBinding({ Simplify: this.props.globalState.simplifyState }, "Simplify", {
+        const simplifyPane = f0.addBinding({ Simplify: this.props.globalState.simplifyState }, "Simplify", {
             label: "Simplify | MeshoptSimplifier",
         });
 
@@ -621,10 +661,38 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             this.props.globalState.simplifyState = ev.value;
             localStorage.setItem("simplifyState", ev.value.toString());
         });
+        //
 
+        //
 
+        //
 
+        //
+        const f1 = pane.addFolder({
+            title: "KHR Extensions",
+        });
 
+        const reorderPane = f1.addBinding({ Reorder: this.props.globalState.reorderState }, "Reorder", {
+            label: "Reorder | EXT_meshopt_compression",
+        });
+
+        reorderPane.on("change", (ev) => {
+            console.log("reorderPane ", ev.value);
+            this.props.globalState.reorderState = ev.value;
+            localStorage.setItem("reorderState", ev.value.toString());
+        });
+
+        //
+
+        const quantizePane = f1.addBinding({ Quantize: this.props.globalState.quantizeState }, "Quantize", {
+            label: "Quantize | KHR_mesh_quantization",
+        });
+
+        quantizePane.on("change", (ev) => {
+            console.log("quantizePane ", ev.value);
+            this.props.globalState.quantizeState = ev.value;
+            localStorage.setItem("quantizeState", ev.value.toString());
+        });
         //
 
         //
@@ -646,6 +714,10 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             transformsArray.push(join());
         }
 
+        if (this.props.globalState.resampleState) {
+            transformsArray.push(resample());
+        }
+
         if (this.props.globalState.weldState) {
             transformsArray.push(weld({ exhaustive: false, tolerance: this.props.globalState.weldTolerance, toleranceNormal: this.props.globalState.weldToleranceNormal }));
         }
@@ -654,54 +726,84 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             transformsArray.push(simplify({ simplifier: MeshoptSimplifier, ratio: 0.75, error: 0.001 }));
         }
 
+        if (this.props.globalState.reorderState) {
+            transformsArray.push(reorder({ encoder: MeshoptEncoder }));
+        }
+        if (this.props.globalState.quantizeState) {
+            transformsArray.push(quantize());
+        }
+
+        //
+        //
+
+        let myFunc;
+        let myOptions;
+
+        if (this.props.globalState.textureValue !== "Keep Original") {
+            console.log("Texture NOT ORIGINAL", this.props.globalState.textureValue);
+
+            myOptions = { targetFormat: this.props.globalState.textureValue };
+            myFunc = textureCompress(myOptions as any);
+            console.log(myFunc);
+
+            if (this.props.globalState.resizeValue !== "No Resize") {
+                console.log("NOT NO RESIZE");
+                myOptions = { targetFormat: this.props.globalState.textureValue, resize: [Number(this.props.globalState.resizeValue), Number(this.props.globalState.resizeValue)] };
+                myFunc = textureCompress(myOptions as any);
+            }
+        } else {
+            if (this.props.globalState.resizeValue !== "No Resize") {
+                console.log("NOT NO RESIZE");
+                myOptions = { resize: [Number(this.props.globalState.resizeValue), Number(this.props.globalState.resizeValue)] };
+                myFunc = textureCompress(myOptions as any);
+            }
+        }
+        if (myFunc) {
+            transformsArray.push(myFunc);
+        }
+
+        //  transformsArray.push(textureCompress({   targetFormat: "webp"}))
         console.log(transformsArray);
         //
         //
-        if (this.props.globalState.resizeValue == undefined || this.props.globalState.resizeValue == "No Resize") {
-            console.log("UNDEFINED | NO RESIZE");
-            console.log("dedup ", this.props.globalState.dedupState);
-            await doc.transform(
-                //   dedup(),
 
-                ...transformsArray
+        console.log("UNDEFINED | NO RESIZE");
+        console.log("dedup ", this.props.globalState.dedupState);
+        await doc.transform(
+            //   dedup(),
 
-                //   weld({ tolerance: 0.001, toleranceNormal: 0.5 }),
-                //
-                //     prune(),
-                //    resample(),
-                //    join({ keepMeshes: false, keepNamed: false }),
-                //    backfaceCulling({ cull: false }),
-                //    weld({ tolerance: 0.001, toleranceNormal: 0.5 }),
+            ...transformsArray,
 
-                //     reorder({ encoder: MeshoptEncoder }),
-                  //      meshopt({encoder: MeshoptEncoder, level: 'medium'})
+      //   backfaceCulling({ cull: false })
 
-                //   simplify({ simplifier: MeshoptSimplifier, ratio: 0.75, error: 0.001 }),
-                //   instance({ min: 2 }),
-                //  textureCompress({
-                //   targetFormat: "webp",
-                //, resize: [1024, 1024]
-                //   })
-            );
-        } else {
-            await doc.transform(
-                //    dedup(),
-                //   join({ keepMeshes: false, keepNamed: false }),
-                //   weld({ tolerance: 0.0001 }),
-                //  simplify({ simplifier: MeshoptSimplifier, ratio: 0.75, error: 0.001 }),
-                //    prune(),
-                //   reorder({ encoder: MeshoptEncoder }),
-                textureCompress({
-                    targetFormat: "webp",
-                    resize: [Number(this.props.globalState.resizeValue), Number(this.props.globalState.resizeValue)],
-                    //  slots: /^(?!normalTexture).*$/ // exclude normal maps
-                })
-            );
-        }
+
+            //                quantize()
+
+            //   weld({ tolerance: 0.001, toleranceNormal: 0.5 }),
+            //
+            //     prune(),
+            //    resample(),
+            //    join({ keepMeshes: false, keepNamed: false }),
+            //    backfaceCulling({ cull: false }),
+            //    weld({ tolerance: 0.001, toleranceNormal: 0.5 }),
+
+            //     reorder({ encoder: MeshoptEncoder }),
+            //      meshopt({encoder: MeshoptEncoder, level: 'medium'})
+
+            //   simplify({ simplifier: MeshoptSimplifier, ratio: 0.75, error: 0.001 }),
+            //   instance({ min: 2 }),
+            //  textureCompress({
+            //   targetFormat: "webp",
+            //, resize: [1024, 1024]
+            //   })
+        );
+
         //@ts-ignore
         function backfaceCulling(options: any) {
             return (doc: any) => {
                 for (const material of doc.getRoot().listMaterials()) {
+                    console.log(material)
+                    console.log(options.cull)
                     material.setDoubleSided(!options.cull);
                 }
             };
@@ -718,7 +820,13 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         this.props.globalState.optURL = assetUrl;
 
         document.getElementById("topRight")!.innerHTML =
-            "Optimized: <strong>" + (glb.length / (1024 * 1024)).toFixed(2).toString() + " Mb</strong> | Resize: <strong>" + this.props.globalState.resizeValue + "</strong> | Texture: <strong>" + this.props.globalState.textureValue +"</strong>";
+            "Optimized: <strong>" +
+            (glb.length / (1024 * 1024)).toFixed(2).toString() +
+            " Mb</strong> | Resize: <strong>" +
+            this.props.globalState.resizeValue +
+            "</strong> | Texture: <strong>" +
+            this.props.globalState.textureValue +
+            "</strong>";
 
         //  console.log(this.props.globalState.optURL)
 
@@ -730,58 +838,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
         //
 
-        // console.log(camScreen)
-        /*
-        this._scene.activeCameras!.push(camScreen)
-        this._scene.activeCamera = camScreen
-        
-            const scr1 = await CreateScreenshotUsingRenderTargetAsync(this._scene.getEngine(), camScreen, {width:1000, height:600},"image/png");
-            console.log(scr1)
-        */
-        /*
-
-        const camScreen = this._scene.getCameraByName("default camera")!.clone("camScreen");
-
-        const camScreen2 = this._scene.getCameraByName("camera2")!.clone("camScreen");
-        this._scene.executeWhenReady(() => {
-
-            this.props.globalState.skybox = false
-            Tools.CreateScreenshotUsingRenderTargetAsync(this._engine, camScreen, { width: this._canvas.width, height: this._canvas.height }).then((base64Data) => {
-                const linkSource = base64Data;
-                const downloadLink = document.createElement("a");
-                downloadLink.href = linkSource;
-                downloadLink.download = "test.png";
-                //   downloadLink.click();
-
-                console.log(base64Data);
-
-                Tools.CreateScreenshotUsingRenderTargetAsync(this._engine, camScreen2, { width: this._canvas.width, height: this._canvas.height }).then((base64Data2) => {
-                    const linkSource = base64Data2;
-                    const downloadLink = document.createElement("a");
-                    downloadLink.href = linkSource;
-                    downloadLink.download = "cam2.png";
-                    //    downloadLink.click();
-//
-
- compareImages(base64Data,base64Data2).then((res)=>{
-    console.log(res)
-    const downloadLink = document.createElement("a");
-                    downloadLink.href = res.dataURL;
-                    downloadLink.download = "dataURL.png";
-                //    downloadLink.click();
- })
-
-
-
-                    //
-
-                });
-            });
-
-            camScreen.dispose()
-            camScreen2.dispose()
-        });
-*/
         //
         //
     }
@@ -890,26 +946,25 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 loader.onValidatedObservable.add((results) => {
                     if (results.issues.numErrors > 0) {
                         this.props.globalState.showDebugLayer();
-                        this.errorNum = results.issues.numErrors
-                        console.log(results.issues)
-                        console.log(results.info)
-                        console.log(results)
-                        console.log('errorNum ', this.errorNum)
-                        document.getElementById('topInfo')!.style.display = "block"
-                        document.getElementById('topInfo')!.innerHTML = "Found <strong>" + this.errorNum + "</strong> validation errors." +"<br/>" + "Hope to correct..."
-                        document.getElementById('topInfo')!.innerHTML += "<br/><small>"+ "Click Inspector button to toggle Inspector.</small>";
+                        this.errorNum = results.issues.numErrors;
+                        console.log(results.issues);
+                        console.log(results.info);
+                        console.log(results);
+                        console.log("errorNum ", this.errorNum);
+                        document.getElementById("topInfo")!.style.display = "block";
+                        document.getElementById("topInfo")!.innerHTML = "Found <strong>" + this.errorNum + "</strong> validation errors." + "<br/>" + "Hope to correct...";
+                        document.getElementById("topInfo")!.innerHTML += "<br/><small>" + "Click Inspector button to toggle Inspector.</small>";
 
-                        
                         setTimeout(() => {
-                            document.getElementById('topInfo')!.style.display = "none"
+                            document.getElementById("topInfo")!.style.display = "none";
                         }, 3000);
                     }
                 });
 
-                loader.onParsedObservable.add(gltfBabylon => {
+                loader.onParsedObservable.add((gltfBabylon) => {
                     console.log(gltfBabylon.json);
-                   // console.log(JSON.stringify(manifest));
-                })
+                    // console.log(JSON.stringify(manifest));
+                });
             }
         });
 

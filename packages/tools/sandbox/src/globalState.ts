@@ -36,13 +36,19 @@ export class GlobalState {
 
     public joinState: boolean = true;
 
+    public resampleState: boolean = true;
+
     public flattenState: boolean = false;
 
     public weldState: boolean = true;
     public weldTolerance: number = 0.001;
-    public weldToleranceNormal: number = 0.5;
+    public weldToleranceNormal: number = 0.25;
 
     public simplifyState: boolean = true;
+
+    public quantizeState: boolean = false;
+
+    public reorderState: boolean = false;
 
     public showDebugLayer() {
         this.isDebugLayerEnabled = true;
