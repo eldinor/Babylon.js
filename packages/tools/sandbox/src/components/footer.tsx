@@ -20,6 +20,7 @@ import iconDownload from "../img/icon-download.svg";
 import iconSkybox from "../img/icon-skybox.svg";
 import iconFullScreen from "../../Assets/icon_Fullscreen.svg";
 import iconTex from "../../Assets/Icon_EditModel.svg";
+import iconDash from "../../Assets/Icon_Dashboard.svg";
 
 import { compareImages } from "../tools/compareImages";
 import { Tools } from "core/Misc/tools";
@@ -78,7 +79,7 @@ export class Footer extends React.Component<IFooterProps> {
 
             setTimeout(() => {
                 Tools.CreateScreenshotUsingRenderTargetAsync(this.props.globalState.currentScene.getEngine(), camScreen, {
-                    width: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.width/2,
+                    width: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.width / 2,
                     height: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.height,
                 }).then((base64Data) => {
                     const linkSource = base64Data;
@@ -90,7 +91,7 @@ export class Footer extends React.Component<IFooterProps> {
                     console.log(base64Data);
 
                     Tools.CreateScreenshotUsingRenderTargetAsync(this.props.globalState.currentScene.getEngine(), camScreen2, {
-                        width: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.width/2,
+                        width: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.width / 2,
                         height: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.height,
                     }).then((base64Data2) => {
                         const linkSource = base64Data2;
@@ -106,7 +107,7 @@ export class Footer extends React.Component<IFooterProps> {
                             document.getElementById("topInfo")!.style.display = "block";
                             document.getElementById("topInfo")!.innerHTML = res.pm + " pixels mismatch, error " + res.error + "%";
                             setTimeout(() => {
-                                document.getElementById('topInfo')!.style.display = "none"
+                                document.getElementById("topInfo")!.style.display = "none";
                             }, 3000);
 
                             const downloadLink = document.createElement("a");
@@ -153,6 +154,14 @@ export class Footer extends React.Component<IFooterProps> {
         const settingsContainer = document.getElementById("settings-container")!;
         settingsContainer.style.display = settingsContainer.style.display === "initial" ? "" : "initial";
     }
+    //
+    openHelp() {
+        console.log("helpContainer opened");
+
+        const helpContainer = document.getElementById("help-container");
+        helpContainer!.style.display = helpContainer!.style.display === "initial" ? "" : "initial";
+    }
+
     //
 
     defineTextureFormat(option: string) {
@@ -291,7 +300,7 @@ export class Footer extends React.Component<IFooterProps> {
                         globalState={this.props.globalState}
                         icon={iconSkybox}
                         label="Toggle Skybox"
-                        onClick={() => (this.props.globalState.skybox = !this.props.globalState.skybox)}
+                        onClick={() => this.props.globalState.skybox! != !this.props.globalState.skybox}
                         enabled={!!this.props.globalState.currentScene}
                     />
                     <FooterButton
@@ -327,7 +336,13 @@ export class Footer extends React.Component<IFooterProps> {
                         enabled={!!this.props.globalState.currentScene}
                     />
 
-                    <FooterButton globalState={this.props.globalState} icon={iconVariants} label="Settings" onClick={() => this.openSettings()} enabled={!!this.props.globalState.currentScene} />
+                    <FooterButton
+                        globalState={this.props.globalState}
+                        icon={iconVariants}
+                        label="Settings"
+                        onClick={() => this.openSettings()}
+                        enabled={!!this.props.globalState.currentScene}
+                    />
 
                     <DropUpButton
                         globalState={this.props.globalState}
@@ -339,6 +354,13 @@ export class Footer extends React.Component<IFooterProps> {
                         enabled={true}
                     />
 
+                    <FooterButton
+                        globalState={this.props.globalState}
+                        icon={iconDash}
+                        label="Help Information"
+                        onClick={() => this.openHelp()}
+                        enabled={true}
+                    />
                 </div>
             </div>
         );
