@@ -44,7 +44,7 @@ export class GlobalState {
     public weldTolerance: number = 0.001;
     public weldToleranceNormal: number = 0.25;
 
-    public simplifyState: boolean = true;
+    public simplifyState: boolean = false;
 
     public quantizeState: boolean = false;
 

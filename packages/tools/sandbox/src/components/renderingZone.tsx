@@ -7,7 +7,7 @@ import { SceneLoader } from "core/Loading/sceneLoader";
 import { GLTFFileLoader } from "loaders/glTF/glTFFileLoader";
 import { Scene } from "core/scene";
 import type { Vector3 } from "core/Maths/math.vector";
-import { ArcRotateCamera } from "core/Cameras/arcRotateCamera";
+import type { ArcRotateCamera } from "core/Cameras/arcRotateCamera";
 import type { FramingBehavior } from "core/Behaviors/Cameras/framingBehavior";
 import { EnvironmentTools } from "../tools/environmentTools";
 import { Tools } from "core/Misc/tools";
@@ -116,151 +116,151 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             this.props.globalState.resizeValue = "No Resize";
         }
 
-        console.log("getResizeValue", getResizeValue);
+        //    console.log("getResizeValue", getResizeValue);
         //
         const getTextureValue = localStorage.getItem("textureValue");
 
         if (getTextureValue) {
             this.props.globalState.textureValue = getTextureValue;
         } else {
-            this.props.globalState.textureValue = "Keep Original";
+            this.props.globalState.textureValue = "webp";
         }
 
         //
         const getDedupState = localStorage.getItem("dedupState");
-        console.log(getDedupState);
+        //    console.log(getDedupState);
 
         if (getDedupState) {
             this.props.globalState.dedupState = parseBool(getDedupState);
 
-            console.log("parsed from Local Storage, dedupState is", this.props.globalState.dedupState);
+            //      console.log("parsed from Local Storage, dedupState is", this.props.globalState.dedupState);
         }
 
-        console.log("Default dedup should be true", this.props.globalState.dedupState);
+        //   console.log("Default dedup should be true", this.props.globalState.dedupState);
 
         //
 
         const getPruneState = localStorage.getItem("pruneState");
-        console.log("getPruneState", getPruneState);
+        //  console.log("getPruneState", getPruneState);
 
         if (getPruneState) {
             this.props.globalState.pruneState = parseBool(getPruneState);
 
-            console.log("parsed from Local Storage, pruneState is", this.props.globalState.pruneState);
+            //  console.log("parsed from Local Storage, pruneState is", this.props.globalState.pruneState);
         }
 
-        console.log("No stored PRUNE value found", this.props.globalState.pruneState);
+        //  console.log("No stored PRUNE value found", this.props.globalState.pruneState);
 
         // end prune
 
         const getFlattenState = localStorage.getItem("flattenState");
-        console.log("getFlattenState", getFlattenState);
+        // console.log("getFlattenState", getFlattenState);
 
         if (getFlattenState) {
             this.props.globalState.flattenState = parseBool(getFlattenState);
 
-            console.log("parsed from Local Storage, flattenState is", this.props.globalState.flattenState);
+            //  console.log("parsed from Local Storage, flattenState is", this.props.globalState.flattenState);
         }
 
-        console.log("No stored FLATTEN value found", this.props.globalState.flattenState);
+        //  console.log("No stored FLATTEN value found", this.props.globalState.flattenState);
         //
         //
         const getJoinState = localStorage.getItem("joinState");
-        console.log("getJoinState", getJoinState);
+        //   console.log("getJoinState", getJoinState);
 
         if (getJoinState) {
             this.props.globalState.joinState = parseBool(getJoinState);
 
-            console.log("parsed from Local Storage, joinState is", this.props.globalState.joinState);
+            //   console.log("parsed from Local Storage, joinState is", this.props.globalState.joinState);
         }
 
-        console.log("No stored JOIN value found", this.props.globalState.joinState);
+        //  console.log("No stored JOIN value found", this.props.globalState.joinState);
         //
         const getResampleState = localStorage.getItem("resampleState");
-        console.log("getResampleState", getResampleState);
+        //  console.log("getResampleState", getResampleState);
 
         if (getResampleState) {
             this.props.globalState.resampleState = parseBool(getResampleState);
 
-            console.log("parsed from Local Storage, resampleState is", this.props.globalState.resampleState);
+            //   console.log("parsed from Local Storage, resampleState is", this.props.globalState.resampleState);
         }
 
-        console.log("No stored resampleState  found", this.props.globalState.resampleState);
+        //   console.log("No stored resampleState  found", this.props.globalState.resampleState);
 
         // end resampleState
         //
         const getWeldState = localStorage.getItem("weldState");
-        console.log("getWeldState", getWeldState);
+        //  console.log("getWeldState", getWeldState);
 
         if (getWeldState) {
             this.props.globalState.weldState = parseBool(getWeldState);
 
-            console.log("parsed from Local Storage, flattenState is", this.props.globalState.weldState);
+            //     console.log("parsed from Local Storage, flattenState is", this.props.globalState.weldState);
         }
 
-        console.log("No stored WELD State value found", this.props.globalState.weldState);
+        //   console.log("No stored WELD State value found", this.props.globalState.weldState);
 
         //
         const getWeldTolerance = localStorage.getItem("weldTolerance");
-        console.log("getWeldTolerance", getWeldTolerance);
+        //   console.log("getWeldTolerance", getWeldTolerance);
 
         if (getWeldTolerance) {
             this.props.globalState.weldTolerance = Number(getWeldTolerance);
 
-            console.log("parsed from Local Storage, weldTolerance is", this.props.globalState.weldTolerance);
+            //      console.log("parsed from Local Storage, weldTolerance is", this.props.globalState.weldTolerance);
         }
 
-        console.log("No stored getWeldTolerance value found", this.props.globalState.weldTolerance);
+        //  console.log("No stored getWeldTolerance value found", this.props.globalState.weldTolerance);
         //
 
         const getWeldToleranceNormal = localStorage.getItem("weldToleranceNormal");
-        console.log("getWeldToleranceNormal", getWeldToleranceNormal);
+        //  console.log("getWeldToleranceNormal", getWeldToleranceNormal);
 
         if (getWeldToleranceNormal) {
             this.props.globalState.weldToleranceNormal = Number(getWeldToleranceNormal);
 
-            console.log("parsed from Local Storage, weldTolerance is", this.props.globalState.weldToleranceNormal);
+            //     console.log("parsed from Local Storage, weldTolerance is", this.props.globalState.weldToleranceNormal);
         } else {
-            console.log("No stored getWeldTolerance value found", this.props.globalState.weldToleranceNormal);
+            //     console.log("No stored getWeldTolerance value found", this.props.globalState.weldToleranceNormal);
         }
 
         //
         const getSimplifyState = localStorage.getItem("simplifyState");
-        console.log("getSimplifyState", getSimplifyState);
+        //   console.log("getSimplifyState", getSimplifyState);
 
         if (getSimplifyState) {
             this.props.globalState.simplifyState = parseBool(getSimplifyState);
 
-            console.log("parsed from Local Storage, SIMPLIFY State is", this.props.globalState.simplifyState);
+            //        console.log("parsed from Local Storage, SIMPLIFY State is", this.props.globalState.simplifyState);
         }
 
-        console.log("No stored SIMPLIFY state found", this.props.globalState.simplifyState);
+        //    console.log("No stored SIMPLIFY state found", this.props.globalState.simplifyState);
 
         // end SIMPLIFY
 
         const getReorderState = localStorage.getItem("reorderState");
-        console.log("getReorderState", getReorderState);
+        //    console.log("getReorderState", getReorderState);
 
         if (getReorderState) {
             this.props.globalState.reorderState = parseBool(getReorderState);
 
-            console.log("parsed from Local Storage, reorderState is", this.props.globalState.reorderState);
+            //        console.log("parsed from Local Storage, reorderState is", this.props.globalState.reorderState);
         }
 
-        console.log("No stored reorderState  found", this.props.globalState.reorderState);
+        //     console.log("No stored reorderState  found", this.props.globalState.reorderState);
 
         // end reorderState
 
         const getQuantizeState = localStorage.getItem("quantizeState");
-        console.log("getQuantizeState", getQuantizeState);
+        //     console.log("getQuantizeState", getQuantizeState);
 
         if (getQuantizeState) {
             this.props.globalState.quantizeState = parseBool(getQuantizeState);
 
-            console.log("parsed from Local Storage, pruneState is", this.props.globalState.quantizeState);
+            //       console.log("parsed from Local Storage, pruneState is", this.props.globalState.quantizeState);
         }
 
-        console.log("No stored Quantize state found", this.props.globalState.quantizeState);
+        //   console.log("No stored Quantize state found", this.props.globalState.quantizeState);
 
         // end Quantize
 
@@ -412,7 +412,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             camera.wheelDeltaPercentage = 0.01;
             camera.pinchDeltaPercentage = 0.01;
 
-       //     camera.lowerRadiusLimit = 1;
+            //     camera.lowerRadiusLimit = 1;
 
             camera.viewport = new Viewport(0, 0, 0.5, 1.0);
 
@@ -514,8 +514,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         this.prepareLighting();
         this.handleErrors();
 
-        console.log();
-
         if (this._scene.getMeshByName("hdrSkyBox")) {
             const hdrSkyBox2 = (this._scene.getMeshByName("hdrSkyBox") as any).createInstance("hdrSkyBox2");
             hdrSkyBox2.layerMask = 0x20000000;
@@ -531,7 +529,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         //    console.log(DracoDecoder)
 
-        console.log(this.props.globalState.resizeValue);
+        //     console.log(this.props.globalState.resizeValue);
 
         const arr = new Uint8Array(await this._originBlob.arrayBuffer());
         document.getElementById("topLeft")!.innerHTML = this.props.globalState.origFilename;
@@ -544,9 +542,9 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         doc.setLogger(new Logger(Logger.Verbosity.DEBUG));
 
-        console.log(inspect(doc));
+        //   console.log(inspect(doc));
 
-        console.log(doc.getRoot().getAsset());
+        //   console.log(doc.getRoot().getAsset());
 
         await MeshoptEncoder.ready;
         //
@@ -568,7 +566,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         dedupPane.on("change", (ev) => {
-            console.log(ev.value);
+            //   console.log(ev.value);
             this.props.globalState.dedupState = ev.value;
             localStorage.setItem("dedupState", ev.value.toString());
         });
@@ -578,7 +576,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         prunePane.on("change", (ev) => {
-            console.log("prunePane ", ev.value);
+            //   console.log("prunePane ", ev.value);
             this.props.globalState.pruneState = ev.value;
             localStorage.setItem("pruneState", ev.value.toString());
         });
@@ -588,7 +586,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         flattenPane.on("change", (ev) => {
-            console.log("flattenPane ", ev.value);
+            //   console.log("flattenPane ", ev.value);
             this.props.globalState.flattenState = ev.value;
             localStorage.setItem("flattenState", ev.value.toString());
         });
@@ -598,7 +596,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         joinPane.on("change", (ev) => {
-            console.log("joinPane ", ev.value);
+            //   console.log("joinPane ", ev.value);
             this.props.globalState.joinState = ev.value;
             localStorage.setItem("joinState", ev.value.toString());
         });
@@ -609,7 +607,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         resamplePane.on("change", (ev) => {
-            console.log("resamplePane ", ev.value);
+            //    console.log("resamplePane ", ev.value);
             this.props.globalState.resampleState = ev.value;
             localStorage.setItem("resampleState", ev.value.toString());
         });
@@ -623,7 +621,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         weldPane.on("change", (ev) => {
-            console.log("weldPane ", ev.value);
+            //    console.log("weldPane ", ev.value);
             this.props.globalState.weldState = ev.value;
             localStorage.setItem("weldState", ev.value.toString());
         });
@@ -634,7 +632,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         weldTolerancePane.on("change", (ev) => {
-            console.log("weldTolerancePane ", ev.value);
+            //    console.log("weldTolerancePane ", ev.value);
             this.props.globalState.weldTolerance = ev.value;
             localStorage.setItem("weldTolerance", ev.value.toString());
         });
@@ -645,7 +643,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         weldToleranceNormalPane.on("change", (ev) => {
-            console.log("weldToleranceNormalPane ", ev.value);
+            //    console.log("weldToleranceNormalPane ", ev.value);
             this.props.globalState.weldToleranceNormal = ev.value;
             localStorage.setItem("weldToleranceNormal", ev.value.toString());
         });
@@ -659,7 +657,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         simplifyPane.on("change", (ev) => {
-            console.log("simplifyPane ", ev.value);
+            //    console.log("simplifyPane ", ev.value);
             this.props.globalState.simplifyState = ev.value;
             localStorage.setItem("simplifyState", ev.value.toString());
         });
@@ -679,7 +677,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         reorderPane.on("change", (ev) => {
-            console.log("reorderPane ", ev.value);
+            //   console.log("reorderPane ", ev.value);
             this.props.globalState.reorderState = ev.value;
             localStorage.setItem("reorderState", ev.value.toString());
         });
@@ -691,12 +689,11 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         quantizePane.on("change", (ev) => {
-            console.log("quantizePane ", ev.value);
+            //   console.log("quantizePane ", ev.value);
             this.props.globalState.quantizeState = ev.value;
             localStorage.setItem("quantizeState", ev.value.toString());
         });
         //
-
 
         const f2 = pane.addFolder({
             title: "Other",
@@ -727,7 +724,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             transformsArray.push(flatten());
         }
         if (this.props.globalState.joinState) {
-            transformsArray.push(join());
+            transformsArray.push(join({ keepMeshes: false, keepNamed: false }));
         }
 
         if (this.props.globalState.resampleState) {
@@ -756,20 +753,16 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         let myOptions;
 
         if (this.props.globalState.textureValue !== "Keep Original") {
-            console.log("Texture NOT ORIGINAL", this.props.globalState.textureValue);
-
             myOptions = { targetFormat: this.props.globalState.textureValue };
             myFunc = textureCompress(myOptions as any);
-            console.log(myFunc);
+            //    console.log(myFunc);
 
             if (this.props.globalState.resizeValue !== "No Resize") {
-                console.log("NOT NO RESIZE");
                 myOptions = { targetFormat: this.props.globalState.textureValue, resize: [Number(this.props.globalState.resizeValue), Number(this.props.globalState.resizeValue)] };
                 myFunc = textureCompress(myOptions as any);
             }
         } else {
             if (this.props.globalState.resizeValue !== "No Resize") {
-                console.log("NOT NO RESIZE");
                 myOptions = { resize: [Number(this.props.globalState.resizeValue), Number(this.props.globalState.resizeValue)] };
                 myFunc = textureCompress(myOptions as any);
             }
@@ -779,12 +772,12 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         }
 
         //  transformsArray.push(textureCompress({   targetFormat: "webp"}))
-        console.log(transformsArray);
+        //      console.log(transformsArray);
         //
         //
 
-        console.log("UNDEFINED | NO RESIZE");
-        console.log("dedup ", this.props.globalState.dedupState);
+        //     console.log("UNDEFINED | NO RESIZE");
+        //     console.log("dedup ", this.props.globalState.dedupState);
         await doc.transform(
             //   dedup(),
 
@@ -817,8 +810,8 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         function backfaceCulling(options: any) {
             return (doc: any) => {
                 for (const material of doc.getRoot().listMaterials()) {
-                    console.log(material);
-                    console.log(options.cull);
+                    //   console.log(material);
+                    //    console.log(options.cull);
                     material.setDoubleSided(!options.cull);
                 }
             };
@@ -962,10 +955,10 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                     if (results.issues.numErrors > 0) {
                         this.props.globalState.showDebugLayer();
                         this.errorNum = results.issues.numErrors;
-                        console.log(results.issues);
-                        console.log(results.info);
-                        console.log(results);
-                        console.log("errorNum ", this.errorNum);
+                        //    console.log(results.issues);
+                        //    console.log(results.info);
+                        //    console.log(results);
+                        //    console.log("errorNum ", this.errorNum);
                         document.getElementById("topInfo")!.style.display = "block";
                         document.getElementById("topInfo")!.innerHTML = "Found <strong>" + this.errorNum + "</strong> validation errors." + "<br/>" + "Hope to correct...";
                         document.getElementById("topInfo")!.innerHTML += "<br/><small>" + "Click Inspector button to toggle Inspector.</small>";
@@ -976,10 +969,26 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                     }
                 });
 
+                /*
                 loader.onParsedObservable.add((gltfBabylon) => {
-                    console.log(gltfBabylon.json);
-                    // console.log(JSON.stringify(manifest));
+                    console.log((gltfBabylon.json as any));
+                    console.log((gltfBabylon.json as any).extensionsRequired);
+                    if( (gltfBabylon.json as any).extensionsRequired) {
+                    (gltfBabylon.json as any).extensionsRequired.forEach((element:any ) => {
+
+                        console.log(element)
+                            if(element.includes("webp")) {
+                                console.log("WEBP")
+                            }
+                            if(element.includes("draco")) {
+                                console.log("DRACO")
+                                
+                            }
+                    })
+                }
+
                 });
+                */
             }
         });
 

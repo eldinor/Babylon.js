@@ -172,37 +172,35 @@ body,
 #help-container {
     position: absolute;
     width: 100%;
-   
+
     margin: 0;
     padding: 0;
-//    background-color: #7baaa483;
+    //    background-color: #7baaa483;
     top: 40px;
     z-index: 199;
     pointer-events: none;
     display: none;
-   
 }
 
 #help {
     width: 55%;
     height: 80vh;
     margin: 0 auto;
-        background: #e7e9e4;
+    background: #e7e9e4;
     //  min-height: 200px;
     padding-left: 10px;
     padding-right: 10px;
     pointer-events: all;
     overflow: scroll;
 }
-#help h1{ 
+#help h1 {
     margin-block-start: 0.5em;
     margin-block-end: -0.4em;
-    font-size:1.4em;
+    font-size: 1.4em;
 }
-#help h2{ 
-    font-size:1.2em;
+#help h2 {
+    font-size: 1.2em;
     padding-bottom: 5px;
-    
 }
 
 #help p {

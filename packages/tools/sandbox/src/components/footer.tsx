@@ -68,41 +68,43 @@ export class Footer extends React.Component<IFooterProps> {
     //
 
     makeScreenshot() {
-        console.log("Screenshot");
-
         this.props.globalState.currentScene.executeWhenReady(() => {
             const camScreen = this.props.globalState.currentScene.getCameraByName("default camera")!.clone("camScreen");
 
             const camScreen2 = this.props.globalState.currentScene.getCameraByName("camera2")!.clone("camScreen");
 
-            this.props.globalState.skybox = false;
+            if (this.props.globalState.skybox) {
+                this.props.globalState.skybox = false;
+            }
 
             setTimeout(() => {
+                // to be sure all this will happen not this frame
                 Tools.CreateScreenshotUsingRenderTargetAsync(this.props.globalState.currentScene.getEngine(), camScreen, {
                     width: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.width / 2,
                     height: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.height,
                 }).then((base64Data) => {
-                    const linkSource = base64Data;
-                    const downloadLink = document.createElement("a");
-                    downloadLink.href = linkSource;
-                    downloadLink.download = "test.png";
+                    //   const linkSource = base64Data;
+                    //  const downloadLink = document.createElement("a");
+                    //  downloadLink.href = linkSource;
+                    //  downloadLink.download = "test.png";
                     //   downloadLink.click();
 
-                    console.log(base64Data);
-
+                    // SHOW DIFF IMAGE URL
+                    //     console.log(base64Data);
+                    //
                     Tools.CreateScreenshotUsingRenderTargetAsync(this.props.globalState.currentScene.getEngine(), camScreen2, {
                         width: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.width / 2,
                         height: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.height,
                     }).then((base64Data2) => {
-                        const linkSource = base64Data2;
-                        const downloadLink = document.createElement("a");
-                        downloadLink.href = linkSource;
-                        downloadLink.download = "cam2.png";
+                        //  const linkSource = base64Data2;
+                        //  const downloadLink = document.createElement("a");
+                        //  downloadLink.href = linkSource;
+                        //  downloadLink.download = "cam2.png";
                         //    downloadLink.click();
                         //
 
                         compareImages(base64Data, base64Data2).then((res) => {
-                            console.log(res);
+                            //   console.log(res);
 
                             document.getElementById("topInfo")!.style.display = "block";
                             document.getElementById("topInfo")!.innerHTML = res.pm + " pixels mismatch, error " + res.error + "%";
@@ -115,10 +117,10 @@ export class Footer extends React.Component<IFooterProps> {
 
                             downloadLink.download = "dataURL.png";
                             //    downloadLink.click();
-                            //@ts-ignore
-                            let screenLayer = new Layer("screenLayer", res.dataURL, this.props.globalState.currentScene, false);
+
+                            const screenLayer = new Layer("screenLayer", res.dataURL, this.props.globalState.currentScene, false);
                             screenLayer.layerMask = 0x20000000;
-                            console.log(screenLayer);
+                            //   console.log(screenLayer);
 
                             this.props.globalState.currentScene.onPointerObservable.addOnce(function () {
                                 setTimeout(() => {
@@ -140,7 +142,7 @@ export class Footer extends React.Component<IFooterProps> {
     //
 
     defineResize(option: string) {
-        console.log(option);
+        //   console.log(option);
         this.props.globalState.resizeValue = option;
 
         //   console.log(this.resizeOptions.indexOf(option))
@@ -149,14 +151,14 @@ export class Footer extends React.Component<IFooterProps> {
     //
 
     openSettings() {
-        console.log("settingsContainer opened");
+        //    console.log("settingsContainer opened");
 
         const settingsContainer = document.getElementById("settings-container")!;
         settingsContainer.style.display = settingsContainer.style.display === "initial" ? "" : "initial";
     }
     //
     openHelp() {
-        console.log("helpContainer opened");
+        //    console.log("helpContainer opened");
 
         const helpContainer = document.getElementById("help-container");
         helpContainer!.style.display = helpContainer!.style.display === "initial" ? "" : "initial";
@@ -165,13 +167,20 @@ export class Footer extends React.Component<IFooterProps> {
     //
 
     defineTextureFormat(option: string) {
-        console.log(option);
+        //    console.log(option);
         this.props.globalState.textureValue = option;
 
         //   console.log(this.resizeOptions.indexOf(option))
         localStorage.setItem("textureValue", option);
     }
-
+    //
+    toggleSkybox() {
+        if (!this.props.globalState.skybox) {
+            this.props.globalState.skybox = true;
+        } else {
+            this.props.globalState.skybox = false;
+        }
+    }
     //
     switchCamera(index: number) {
         const camera = this.props.globalState.currentScene!.cameras[index];
@@ -300,7 +309,7 @@ export class Footer extends React.Component<IFooterProps> {
                         globalState={this.props.globalState}
                         icon={iconSkybox}
                         label="Toggle Skybox"
-                        onClick={() => this.props.globalState.skybox! != !this.props.globalState.skybox}
+                        onClick={() => this.toggleSkybox()}
                         enabled={!!this.props.globalState.currentScene}
                     />
                     <FooterButton
@@ -354,13 +363,7 @@ export class Footer extends React.Component<IFooterProps> {
                         enabled={true}
                     />
 
-                    <FooterButton
-                        globalState={this.props.globalState}
-                        icon={iconDash}
-                        label="Help Information"
-                        onClick={() => this.openHelp()}
-                        enabled={true}
-                    />
+                    <FooterButton globalState={this.props.globalState} icon={iconDash} label="Help Information" onClick={() => this.openHelp()} enabled={true} />
                 </div>
             </div>
         );

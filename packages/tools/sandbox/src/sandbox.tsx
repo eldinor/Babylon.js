@@ -205,53 +205,77 @@ export class Sandbox extends React.Component<ISandboxProps, { isFooterVisible: b
                             Converted Size
                         </div>
                     </div>
-                    <div id="topInfo">
-                    </div>
+                    <div id="topInfo"></div>
                 </div>
                 <div id="help-container">
-                <div id="help">
+                    <div id="help">
+                        <h2>Instant reload - press 'R' to reload the file with new optimization settings applied.</h2>
 
-                    <h2>Instant reload - press 'R' to reload the file with new settings applied.</h2>
+                        <h1>Basic Optimization</h1>
+                        <h2>Dedup</h2>
+                        <p>Removes duplicate Accessor, Mesh, Texture, and Material properties.</p>
+                        <small>Default: true</small>
 
-                    <h1>Basic Optimization</h1>
-                <h2>Dedup</h2>
-                <p>Removes duplicate Accessor, Mesh, Texture, and Material properties.</p>
-                <small>Default: true</small>
+                        <h2>Prune</h2>
+                        <p>Removes properties from the file if they are not referenced by a Scene.</p>
+                        <small>Default: true</small>
 
-                <h2>Prune</h2>
-                <p>Removes properties from the file if they are not referenced by a Scene.</p>
-                <small>Default: true</small>
+                        <h2>Flatten</h2>
+                        <p>
+                            Flattens the scene graph, leaving Nodes with Meshes, Cameras, and other attachments as direct children of the Scene. Skeletons and their descendants are
+                            left in their original Node structure.
+                        </p>
+                        <small>Default: true</small>
 
-                <h2>Flatten</h2>
-                <p>Flattens the scene graph, leaving Nodes with Meshes, Cameras, and other attachments as direct children of the Scene. Skeletons and their descendants are left in their original Node structure.</p>
-                <small>Default: true</small>
+                        <h2>Resample</h2>
+                        <p>
+                            Resample AnimationChannels, losslessly deduplicating keyframes to reduce file size. Duplicate keyframes are commonly present in animation 'baked' by the
+                            authoring software to apply IK constraints or other software-specific features.
+                        </p>
+                        <small>Default: true</small>
 
-                <h2>Resample</h2>
-                <p>Resample AnimationChannels, losslessly deduplicating keyframes to reduce file size. Duplicate keyframes are commonly present in animation 'baked' by the authoring software to apply IK constraints or other software-specific features.</p>
-                <small>Default: true</small>
+                        <h2>Weld</h2>
+                        <p>
+                            Index Primitives and (optionally) merge similar vertices. When merged and indexed, data is shared more efficiently between vertices. File size can be
+                            reduced, and the GPU can sometimes use the vertex cache more efficiently. The 'tolerance' threshold determines which vertices qualify for welding based
+                            on distance between the vertices as a fraction of the primitive's bounding box (AABB). To preserve visual appearance consistently, use low
+                            toleranceNormal thresholds around 0.1 (±3º). To pre-processing a scene before simplification or LOD creation, use higher thresholds around 0.5 (±30º).
+                        </p>
+                        <small>Default: true | tolerance = 0.001 | toleranceNormal = 0.25</small>
 
-                <h2>Weld</h2>
-                <p>Index Primitives and (optionally) merge similar vertices. When merged and indexed, data is shared more efficiently between vertices. File size can be reduced, and the GPU can sometimes use the vertex cache more efficiently.  
-                    The 'tolerance' threshold determines which vertices qualify for welding based on distance between the vertices as a fraction of the primitive's bounding box (AABB). To preserve visual appearance consistently, use low toleranceNormal thresholds around 0.1 (±3º). To pre-processing a scene before simplification or LOD creation, use higher thresholds around 0.5 (±30º).</p>
-                <small>Default: true | tolerance = 0.001 | toleranceNormal = 0.25</small>
+                        <h2>Simplify</h2>
+                        <p>
+                            Simplification algorithm, based on meshoptimizer, producing meshes with fewer triangles and vertices. Simplification is lossy, but the algorithm aims to
+                            preserve visual quality as much as possible for given parameters.
+                        </p>
+                        <small>Default: false</small>
 
-                <h2>Simplify</h2>
-                <p>Simplification algorithm, based on meshoptimizer, producing meshes with fewer triangles and vertices. Simplification is lossy, but the algorithm aims to preserve visual quality as much as possible for given parameters.</p>
-                <small>Default: true</small>
+                        <h1>KHR Extensions</h1>
 
-                <h1>KHR Extensions</h1>
+                        <h2>Quantize</h2>
+                        <p>Quantizes vertex attributes with KHR_mesh_quantization, reducing the size and memory footprint of the file.</p>
+                        <small>Default: false</small>
 
-                <h2>Quantize</h2>
-                <p>Quantizes vertex attributes with KHR_mesh_quantization, reducing the size and memory footprint of the file.</p>
-                <small>Default: false</small>
+                        <h2>Reorder</h2>
+                        <p>
+                            Optimizes Mesh Primitives for locality of reference. EXT_meshopt_compression provides compression and fast decoding for geometry, morph targets, and
+                            animations. While Meshopt decoding is considerably faster than Draco decoding, neither compression method will improve runtime performance directly. To
+                            improve framerate, you'll need to simplify the geometry by reducing vertex count or draw calls — not just compress it. Finally, be aware that Meshopt
+                            compression is lossy: repeatedly compressing and decompressing a model in a pipeline will lose precision, so compression should generally be the last
+                            stage of an art workflow, and uncompressed original files should be kept.
+                        </p>
+                        <small>Default: false</small>
 
-                <h2>Reorder</h2>
-                <p>Optimizes Mesh Primitives for locality of reference. EXT_meshopt_compression provides compression and fast decoding for geometry, morph targets, and animations. While Meshopt decoding is considerably faster than Draco decoding, neither compression method will improve runtime performance directly. To improve framerate, you'll need to simplify the geometry by reducing vertex count or draw calls — not just compress it. Finally, be aware that Meshopt compression is lossy: repeatedly compressing and decompressing a model in a pipeline will lose precision, so compression should generally be the last stage of an art workflow, and uncompressed original files should be kept.</p>
-                <small>Default: false</small>
-
-                <h5><small>Based on <a href="https://gltf-transform.dev/" target="_blank">GLTF-Transform</a> - glTF 2.0 SDK for JavaScript and TypeScript, on Web and Node.js.</small></h5>
-
-                </div>
+                        <h5>
+                            <small>
+                                Based on{" "}
+                                <a href="https://gltf-transform.dev/" target="_blank">
+                                    GLTF-Transform
+                                </a>{" "}
+                                - glTF 2.0 SDK for JavaScript and TypeScript, on Web and Node.js.
+                            </small>
+                        </h5>
+                    </div>
                 </div>
                 <div id="settings-container">
                     <div id="settings"></div>
