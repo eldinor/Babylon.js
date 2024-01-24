@@ -777,7 +777,16 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         let myFunc;
         let myOptions;
 
-        if (this.props.globalState.textureValue == "ktx2") {
+        let texMode;
+
+        if(this.props.globalState.textureValue == "ktx2/UASTC"){
+            texMode = true
+        }
+        if (this.props.globalState.textureValue == "ktx2/ETC1S"){
+            texMode = false
+        }
+
+        if (this.props.globalState.textureValue == "ktx2/UASTC" || this.props.globalState.textureValue == "ktx2/ETC1S") {
             //   console.log("KTX2");
 
             //   console.log(this.props.globalState);
@@ -803,15 +812,29 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 timer = Date.now();
                 let img = tex.getImage();
 
+                let mt = tex.getMimeType()
+                let texType;
+
+                if(mt.includes("jpeg")){
+                    texType = 0
+                }
+                if(mt.includes("png")){
+                    texType = 1
+                }
+                
+
                 if (img) {
                     let imgKTX = await ktx.encodeToKTX2(img.buffer, {
-                        type: 1,
+                        type: texType,
                         enableDebug: false,
                         generateMipmap: true,
-                        isUASTC: true,
+                        isUASTC: texMode,
 
                         //  isSetKTX2SRGBTransferFunc: false,
-                        qualityLevel: 10,
+                        qualityLevel: 155, // 1-255
+                        compressionLevel: 3, // 0-5
+                      //  needSupercompression:false,
+
                     });
                     tex.setMimeType("image/ktx2").setImage(imgKTX);
                 }
@@ -1064,7 +1087,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 });
 
                 loader.onValidatedObservable.add((results) => {
-                    if (results.issues.numErrors > 0 && this.props.globalState.textureValue !== "ktx2") {
+                    if (results.issues.numErrors > 0 && !this.props.globalState.textureValue.includes("ktx2")) {
                         this.props.globalState.showDebugLayer();
                         this.errorNum = results.issues.numErrors;
                         //    console.log(results.issues);

@@ -6,7 +6,7 @@ interface IpmResult {
     dataURL: string;
 }
 
-export async function compareImages(src1: string, src2: string): Promise<IpmResult> {
+export async function compareImages(src1: string, src2: string, threshold?: number, diffColorAltEnabled?: boolean, diffColorAlt?: [number, number, number]): Promise<IpmResult> {
     let canvas1 = document.getElementById("canvas1") as HTMLCanvasElement;
     if (!canvas1) {
         canvas1 = document.createElement("canvas");
@@ -47,11 +47,21 @@ export async function compareImages(src1: string, src2: string): Promise<IpmResu
     const i2 = context2!.getImageData(0, 0, width, height);
     const diff = contextD!.createImageData(width, height);
 
+    if (!threshold) {
+        threshold = 0.05;
+    }
+
+    if (diffColorAltEnabled) {
+        if (!diffColorAlt) {
+            diffColorAlt = [0, 255, 255];
+        }
+    }
+
     const pm = pixelmatch(i1.data, i2.data, diff.data, canvas1.width, canvas1.height, {
-        threshold: 0.05,
+        threshold: threshold,
         includeAA: true,
         diffMask: true,
-        //  diffColorAlt: [0, 255, 255],
+        diffColorAlt: diffColorAlt, //,
     });
 
     // console.log(pm);

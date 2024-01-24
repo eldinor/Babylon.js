@@ -33,7 +33,7 @@ interface IFooterProps {
 export class Footer extends React.Component<IFooterProps> {
     private _cameraNames: string[] = [];
     public resizeOptions: string[] = ["No Resize", "2048", "1024", "512", "256"];
-    public textureOptions: string[] = ["Keep Original", "webp", "png", "ktx2"];
+    public textureOptions: string[] = ["Keep Original", "webp", "png", "ktx2/UASTC", "ktx2/ETC1S"];
 
     public constructor(props: IFooterProps) {
         super(props);
@@ -103,7 +103,7 @@ export class Footer extends React.Component<IFooterProps> {
                         //    downloadLink.click();
                         //
 
-                        compareImages(base64Data, base64Data2).then((res) => {
+                        compareImages(base64Data, base64Data2, undefined,true, [0,255,0]).then((res) => {
                             //   console.log(res);
 
                             document.getElementById("topInfo")!.style.display = "block";
