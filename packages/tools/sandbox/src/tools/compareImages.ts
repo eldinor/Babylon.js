@@ -48,7 +48,7 @@ export async function compareImages(src1: string, src2: string): Promise<IpmResu
     const diff = contextD!.createImageData(width, height);
 
     const pm = pixelmatch(i1.data, i2.data, diff.data, canvas1.width, canvas1.height, {
-        threshold: 0.1,
+        threshold: 0.05,
         includeAA: true,
         diffMask: true,
         //  diffColorAlt: [0, 255, 255],

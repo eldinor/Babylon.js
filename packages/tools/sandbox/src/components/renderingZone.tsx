@@ -22,7 +22,7 @@ import { PBRBaseMaterial } from "core/Materials/PBR/pbrBaseMaterial";
 import { Texture } from "core/Materials/Textures/texture";
 import { PBRMaterial } from "core/Materials/PBR/pbrMaterial";
 //
-import { WebIO, Logger } from "@gltf-transform/core";
+import { WebIO, Logger, ImageUtils } from "@gltf-transform/core";
 import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
 //@ts-ignore
 import { MeshoptEncoder, MeshoptSimplifier } from "meshoptimizer";
@@ -35,6 +35,16 @@ import { Viewport } from "core/Maths/math.viewport";
 
 import { Pane } from "tweakpane";
 
+import * as ktx from "ktx2-encoder";
+import { ktxfix } from "../tools/ktxfix";
+/*
+import {
+    KHR_DF_PRIMARIES_BT709,
+    KHR_DF_PRIMARIES_UNSPECIFIED,
+    read,
+    write,
+  } from "ktx-parse";
+*/
 function isTextureAsset(name: string): boolean {
     const queryStringIndex = name.indexOf("?");
     if (queryStringIndex !== -1) {
@@ -263,6 +273,9 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         //   console.log("No stored Quantize state found", this.props.globalState.quantizeState);
 
         // end Quantize
+
+        if (this.props.globalState.textureValue == "ktx2") {
+        }
 
         //
 
@@ -543,7 +556,19 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         doc.setLogger(new Logger(Logger.Verbosity.DEBUG));
 
         //   console.log(inspect(doc));
+        let totalVRAM = 0;
+        doc.getRoot()
+            .listTextures()
+            .forEach((tex) => {
+                const vram = ImageUtils.getVRAMByteLength(tex.getImage()!, tex.getMimeType());
 
+                //  console.log("VRAM: " + vram)
+                totalVRAM += vram!;
+            });
+
+        //    console.log("TOTAL VRAM " + niceBytes(totalVRAM))
+
+        document.getElementById("topLeft")!.innerHTML += " | Texture VRAM " + niceBytes(totalVRAM);
         //   console.log(doc.getRoot().getAsset());
 
         await MeshoptEncoder.ready;
@@ -752,7 +777,81 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         let myFunc;
         let myOptions;
 
-        if (this.props.globalState.textureValue !== "Keep Original") {
+        if (this.props.globalState.textureValue == "ktx2") {
+            //   console.log("KTX2");
+
+            //   console.log(this.props.globalState);
+            document.getElementById("ktx-container")!.style.display = "initial"
+            document.getElementById("ktx")!.innerHTML = "Starting KTX2 Conversion";
+
+            if (this.props.globalState.resizeValue !== "No Resize") {
+                myOptions = { resize: [Number(this.props.globalState.resizeValue), Number(this.props.globalState.resizeValue)] };
+                myFunc = textureCompress(myOptions as any);
+                await doc.transform(myFunc);
+            }
+            //   console.log(this.props.globalState.resizeValue);
+            //
+            // START KTX
+
+            //   console.log("Starting KTX2 Conversion");
+
+            let totalTime = 0;
+            let timer = 0;
+         //   let texIndex = 0;
+
+            for (const tex of doc.getRoot().listTextures()) {
+                timer = Date.now();
+                let img = tex.getImage();
+
+                if (img) {
+                    let imgKTX = await ktx.encodeToKTX2(img.buffer, {
+                        type: 1,
+                        enableDebug: false,
+                        generateMipmap: true,
+                        isUASTC: true,
+
+                        //  isSetKTX2SRGBTransferFunc: false,
+                        qualityLevel: 10,
+                    });
+                    tex.setMimeType("image/ktx2").setImage(imgKTX);
+                }
+
+                console.log(tex.getName());
+                console.log(tex.getSize()![0] + " * " + tex.getSize()![1]);
+
+            //    document.getElementById("ktx")!.innerHTML = "Texture " + texIndex + tex.getName();
+             //   document.getElementById("ktx")!.innerHTML += tex.getSize()![0] + " * " + tex.getSize()![1];
+
+                console.log(((Date.now() - timer) * 0.001).toFixed(2) + " seconds");
+                totalTime += Number(((Date.now() - timer) * 0.001).toFixed(2));
+            }
+
+            console.log("Total Conversion Time " + totalTime.toFixed(2) + " seconds");
+
+            document.getElementById("ktx")!.innerHTML = "Total Conversion Time " + totalTime.toFixed(2) + " seconds";
+
+      //      document.getElementById("ktx")!.innerHTML += "<br/>Finished KTX2 Conversion, fixing..."
+
+            console.log("Finished KTX2 Conversion, fixing...");
+
+            timer = Date.now();
+            await doc.transform(ktxfix());
+
+            console.log("The correction took " + ((Date.now() - timer) * 0.001).toFixed(2) + " seconds");
+            //  console.log(inspect(doc));
+        //    document.getElementById("ktx")!.innerHTML += " " + ((Date.now() - timer) * 0.001).toFixed(2) + " seconds."
+            document.getElementById("ktx")!.innerHTML += "<br/> Done!"
+       
+            //
+            this._scene.onPointerObservable.addOnce(function () {
+                setTimeout(() => {
+                    document.getElementById("ktx-container")!.style.display = "none"
+                }, 3000);
+            });
+            //
+        }
+//
+        if (this.props.globalState.textureValue !== "Keep Original" && this.props.globalState.textureValue !== "ktx2") {
             myOptions = { targetFormat: this.props.globalState.textureValue };
             myFunc = textureCompress(myOptions as any);
             //    console.log(myFunc);
@@ -806,6 +905,18 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             //   })
         );
 
+        totalVRAM = 0;
+        doc.getRoot()
+            .listTextures()
+            .forEach((tex) => {
+                const vram = ImageUtils.getVRAMByteLength(tex.getImage()!, tex.getMimeType());
+
+                //    console.log("OPTIMIZED VRAM: " + vram)
+                totalVRAM += vram!;
+            });
+
+        //    console.log("TOTAL OPTIMIZED VRAM " + niceBytes(totalVRAM))
+
         //@ts-ignore
         function backfaceCulling(options: any) {
             return (doc: any) => {
@@ -835,6 +946,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             "</strong> | Texture: <strong>" +
             this.props.globalState.textureValue +
             "</strong>";
+        document.getElementById("topRight")!.innerHTML += " | OPTIMIZED VRAM " + niceBytes(totalVRAM);
 
         //  console.log(this.props.globalState.optURL)
 
@@ -952,7 +1064,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 });
 
                 loader.onValidatedObservable.add((results) => {
-                    if (results.issues.numErrors > 0) {
+                    if (results.issues.numErrors > 0 && this.props.globalState.textureValue !== "ktx2") {
                         this.props.globalState.showDebugLayer();
                         this.errorNum = results.issues.numErrors;
                         //    console.log(results.issues);
@@ -1010,4 +1122,29 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             </div>
         );
     }
+}
+
+export function formatBytes(bytes: number, decimals = 0) {
+    if (!+bytes) return "0 Bytes";
+
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ["Bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"];
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+}
+
+export function niceBytes(z: number) {
+    const units = ["bytes", "Kb", "Mb", "Gb", "Tb"];
+    let x = z.toString();
+    let l = 0,
+        n = parseInt(x, 10) || 0;
+
+    while (n >= 1024 && ++l) {
+        n = n / 1024;
+    }
+
+    return n.toFixed(2) + " " + units[l];
 }

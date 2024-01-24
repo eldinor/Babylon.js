@@ -207,6 +207,17 @@ export class Sandbox extends React.Component<ISandboxProps, { isFooterVisible: b
                     </div>
                     <div id="topInfo"></div>
                 </div>
+
+                <div id="ktx-container">
+                <div id="ktx">
+
+               
+
+
+                    </div>
+                </div>
+
+
                 <div id="help-container">
                     <div id="help">
                         <h2>Instant reload - press 'R' to reload the file with new optimization settings applied.</h2>

@@ -33,7 +33,7 @@ interface IFooterProps {
 export class Footer extends React.Component<IFooterProps> {
     private _cameraNames: string[] = [];
     public resizeOptions: string[] = ["No Resize", "2048", "1024", "512", "256"];
-    public textureOptions: string[] = ["Keep Original", "webp", "png"];
+    public textureOptions: string[] = ["Keep Original", "webp", "png", "ktx2"];
 
     public constructor(props: IFooterProps) {
         super(props);
@@ -319,15 +319,7 @@ export class Footer extends React.Component<IFooterProps> {
                         onClick={() => this.showURL()}
                         enabled={!!this.props.globalState.currentScene}
                     />
-                    {/*
-                    <FooterButton
-                        globalState={this.props.globalState}
-                        icon={iconCameras}
-                        label="Screenshot"
-                        onClick={() => this.makeScreenshot()}
-                        enabled={!!this.props.globalState.currentScene}
-                    />
-                    */}
+
                     <DropUpButton
                         globalState={this.props.globalState}
                         icon={iconFullScreen}
@@ -364,6 +356,8 @@ export class Footer extends React.Component<IFooterProps> {
                     />
 
                     <FooterButton globalState={this.props.globalState} icon={iconDash} label="Help Information" onClick={() => this.openHelp()} enabled={true} />
+
+                    
                 </div>
             </div>
         );
