@@ -103,7 +103,7 @@ export class Footer extends React.Component<IFooterProps> {
                         //    downloadLink.click();
                         //
 
-                        compareImages(base64Data, base64Data2, undefined, true, [0, 255, 0]).then((res) => {
+                        compareImages(base64Data, base64Data2 ).then((res) => {
                             //   console.log(res);
 
                             document.getElementById("topInfo")!.style.display = "block";

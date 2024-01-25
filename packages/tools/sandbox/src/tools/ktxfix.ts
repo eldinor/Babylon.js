@@ -34,7 +34,7 @@ export function ktxfix(): Transform {
             // See: https://github.com/donmccurdy/glTF-Transform/issues/218
             if (dfd.colorPrimaries !== colorPrimaries) {
                 dfd.colorPrimaries = colorPrimaries;
-                logger.info(`${"GLB CONVERTER"}: Set colorPrimaries=${colorPrimaries} for texture "${name}"`);
+                logger.info(`${"GLB CONVERTER"}: Set colorPrimaries = ${colorPrimaries} for texture "${name}"`);
                 changed = true;
             }
 

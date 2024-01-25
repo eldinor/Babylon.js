@@ -50,6 +50,12 @@ export class GlobalState {
 
     public reorderState: boolean = false;
 
+    public qualityLevel: number = 155;
+
+    public compressionLevel: number = 2;
+
+    public needSupercompression: boolean = true;
+
     public showDebugLayer() {
         this.isDebugLayerEnabled = true;
         if (this.currentScene) {

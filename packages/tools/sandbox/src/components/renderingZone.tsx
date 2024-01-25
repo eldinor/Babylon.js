@@ -118,6 +118,12 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         }
         //
 
+
+      //  console.log("compressionLevel ", this.props.globalState.compressionLevel)
+        //
+        //
+
+
         const getResizeValue = localStorage.getItem("resizeValue");
 
         if (getResizeValue) {
@@ -240,45 +246,56 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         if (getSimplifyState) {
             this.props.globalState.simplifyState = parseBool(getSimplifyState);
-
-            //        console.log("parsed from Local Storage, SIMPLIFY State is", this.props.globalState.simplifyState);
         }
-
-        //    console.log("No stored SIMPLIFY state found", this.props.globalState.simplifyState);
 
         // end SIMPLIFY
 
         const getReorderState = localStorage.getItem("reorderState");
-        //    console.log("getReorderState", getReorderState);
 
         if (getReorderState) {
             this.props.globalState.reorderState = parseBool(getReorderState);
-
-            //        console.log("parsed from Local Storage, reorderState is", this.props.globalState.reorderState);
         }
-
-        //     console.log("No stored reorderState  found", this.props.globalState.reorderState);
 
         // end reorderState
 
         const getQuantizeState = localStorage.getItem("quantizeState");
-        //     console.log("getQuantizeState", getQuantizeState);
 
         if (getQuantizeState) {
             this.props.globalState.quantizeState = parseBool(getQuantizeState);
-
-            //       console.log("parsed from Local Storage, pruneState is", this.props.globalState.quantizeState);
         }
-
-        //   console.log("No stored Quantize state found", this.props.globalState.quantizeState);
 
         // end Quantize
 
-        if (this.props.globalState.textureValue == "ktx2") {
+        const getQualityLevel = localStorage.getItem("qualityLevel");
+
+        if (getQualityLevel) {
+            this.props.globalState.qualityLevel = Number(getQualityLevel);
         }
 
         //
 
+        let getCompressionLevel = localStorage.getItem("compressionLevel");
+
+        /*
+        if (isNaN(getCompressionLevel as any)) {
+            getCompressionLevel = "2"
+          }
+*/
+        if (getCompressionLevel) {
+            this.props.globalState.compressionLevel = Number(getCompressionLevel);
+        } else {
+            this.props.globalState.compressionLevel = 2
+        }
+        //
+        //
+        const getNeedSupercompression = localStorage.getItem("needSupercompression");
+
+        if (getNeedSupercompression) {
+            this.props.globalState.needSupercompression = parseBool(getNeedSupercompression);
+        }
+        //
+        //
+        //
         // Resize
         window.addEventListener("resize", () => {
             this._engine.resize();
@@ -707,7 +724,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             localStorage.setItem("reorderState", ev.value.toString());
         });
 
-        //
+        // this.props.globalState.textureValue == "ktx2/MIX"
 
         const quantizePane = f1.addBinding({ Quantize: this.props.globalState.quantizeState }, "Quantize", {
             label: "Quantize | KHR_mesh_quantization",
@@ -719,7 +736,65 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             localStorage.setItem("quantizeState", ev.value.toString());
         });
         //
+        const fKTX = pane.addFolder({
+            title: "KTX2 Compression",
+        });
 
+        const qualityLevelPane = fKTX.addBinding({ qualityLevel: this.props.globalState.qualityLevel }, "qualityLevel", {
+            min: 1,
+            max: 255,
+            step: 1,
+            label: "ETC1S Quality Level (255 = best)",
+        });
+
+        qualityLevelPane.on("change", (ev) => {
+            this.props.globalState.qualityLevel = ev.value;
+            localStorage.setItem("qualityLevel", ev.value.toString());
+        });
+
+//
+//
+        const cpLevelPane = fKTX.addBinding({ compressionLevel: this.props.globalState.compressionLevel }, "compressionLevel", {
+            min: 0,
+            max: 5,
+            step: 1,
+            label: "ETC1S Compression Level (0 = fastest)",
+        });
+
+        cpLevelPane.on("change", (ev) => {
+            this.props.globalState.compressionLevel = ev.value;
+            localStorage.setItem("compressionLevel", ev.value.toString());
+        });
+
+
+        /*
+        const compressionLevelPane = fKTX.addBinding({ compressionLevel: this.props.globalState.compressionLevel }, "compressionLevel", {
+            min: 0,
+            max: 5,
+            step: 1,
+            label: "ETC1S Compression Level (0 = fastest)",
+            
+        });
+
+        compressionLevelPane.on("change", (ev) => {
+            this.props.globalState.compressionLevel = ev.value;
+
+            console.log(this.props.globalState.compressionLevel )
+            localStorage.setItem("compressionLevel", ev.value.toString());
+            console.log(localStorage)
+        });
+        //
+        */
+        //
+        const needSupercompressionPane = fKTX.addBinding({ needSupercompression: this.props.globalState.needSupercompression }, "needSupercompression", {
+            label: "Use UASTC Zstandard Supercompression",
+        });
+
+        needSupercompressionPane.on("change", (ev) => {
+            this.props.globalState.needSupercompression = ev.value;
+            localStorage.setItem("needSupercompression", ev.value.toString());
+        });
+        //
         const f2 = pane.addFolder({
             title: "Other",
         });
@@ -779,22 +854,33 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         let texMode;
 
-        if(this.props.globalState.textureValue == "ktx2/UASTC"){
-            texMode = true
+        if (this.props.globalState.textureValue == "ktx2/UASTC") {
+            texMode = true;
         }
-        if (this.props.globalState.textureValue == "ktx2/ETC1S"){
-            texMode = false
+        if (this.props.globalState.textureValue == "ktx2/ETC1S") {
+            texMode = false;
         }
 
         if (this.props.globalState.textureValue == "ktx2/UASTC" || this.props.globalState.textureValue == "ktx2/ETC1S" || this.props.globalState.textureValue == "ktx2/MIX") {
             //   console.log("KTX2");
 
             //   console.log(this.props.globalState);
-            document.getElementById("ktx-container")!.style.display = "initial"
+            document.getElementById("ktx-container")!.style.display = "initial";
             document.getElementById("ktx")!.innerHTML = "Starting KTX2 Conversion...";
-            
-            if(this.props.globalState.textureValue == "ktx2/MIX"){
-                document.getElementById("ktx")!.innerHTML += "<br/> In the MIX mode albedo (baseColor) textures are compressed with ETC1S, texture from all other channels are processed with UASTC.";
+//
+if (this.props.globalState.textureValue == "ktx2/UASTC") {
+    document.getElementById("ktx")!.innerHTML +=
+        "<br/>UASTC is designed for efficient interchange of very high quality GPU texture data while being quickly transcodable to numerous other hardware GPU texture formats. ";
+}
+
+if (this.props.globalState.textureValue == "ktx2/ETC1S") {
+    document.getElementById("ktx")!.innerHTML +=
+        "<br/>ETC1S is the original low/medium quality mode, producing lower file size but with lower quality in comparison with UASTC. To use ETC1S only on albedo textures choose <strong>ktx2/MIX</strong> Texture Format.";
+}
+
+            if (this.props.globalState.textureValue == "ktx2/MIX") {
+                document.getElementById("ktx")!.innerHTML +=
+                    "<br/> In the MIX mode albedo (baseColor) textures are processed with ETC1S.<br/> Texture from all other channels are compressed with UASTC.";
             }
 
             if (this.props.globalState.resizeValue !== "No Resize") {
@@ -806,41 +892,42 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             //
             // START KTX
 
-            //   console.log("Starting KTX2 Conversion");
+             console.log("Starting KTX2 Conversion");
+         //    console.log("compressionLevel ", this.props.globalState.compressionLevel)
 
             let totalTime = 0;
             let timer = 0;
-         //   let texIndex = 0;
+            //   let texIndex = 0;
 
             for (const tex of doc.getRoot().listTextures()) {
                 timer = Date.now();
                 let img = tex.getImage();
 
-                let mt = tex.getMimeType()
+                let mt = tex.getMimeType();
                 let texType;
 
-                if(mt.includes("jpeg")){
-                    texType = 0
+                if (mt.includes("jpeg")) {
+                    texType = 0;
                 }
-                if(mt.includes("png")){
-                    texType = 1
+                if (mt.includes("png")) {
+                    texType = 1;
                 }
                 //
                 //
-                if(this.props.globalState.textureValue == "ktx2/MIX"){
-                const slots = listTextureSlots(tex);
-                console.log(slots)
+                if (this.props.globalState.textureValue == "ktx2/MIX") {
+                    const slots = listTextureSlots(tex);
+                    console.log(slots);
 
-                for(const slot of slots){
-                    if (slot.includes("baseColor")){
-                        texMode = false
+                    for (const slot of slots) {
+                        if (slot.includes("baseColor")) {
+                            texMode = false;
+                        } else {
+                            texMode = true;
+                        }
                     }
-                    else {texMode = true}
                 }
-
-            }
-//
-//
+                //
+                //
 
                 if (img) {
                     let imgKTX = await ktx.encodeToKTX2(img.buffer, {
@@ -848,24 +935,21 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                         enableDebug: false,
                         generateMipmap: true,
                         isUASTC: texMode,
-
+                        qualityLevel: this.props.globalState.qualityLevel, // 1-255
+                        compressionLevel: this.props.globalState.compressionLevel, // 0-5
                         //  isSetKTX2SRGBTransferFunc: false,
-                        qualityLevel: 155, // 1-255
-                        compressionLevel: 3, // 0-5
-                      //  needSupercompression:false,
-
+                        //  needSupercompression:false,
                     });
+
                     tex.setMimeType("image/ktx2").setImage(imgKTX);
                 }
 
+                // KTX2 Texture done
                 console.log(tex.getName());
                 console.log(tex.getSize()![0] + " * " + tex.getSize()![1]);
 
-
-
-
-            //    document.getElementById("ktx")!.innerHTML = "Texture " + texIndex + tex.getName();
-             //   document.getElementById("ktx")!.innerHTML += tex.getSize()![0] + " * " + tex.getSize()![1];
+                //    document.getElementById("ktx")!.innerHTML = "Texture " + texIndex + tex.getName();
+                //   document.getElementById("ktx")!.innerHTML += tex.getSize()![0] + " * " + tex.getSize()![1];
 
                 console.log(((Date.now() - timer) * 0.001).toFixed(2) + " seconds");
                 totalTime += Number(((Date.now() - timer) * 0.001).toFixed(2));
@@ -875,7 +959,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
             document.getElementById("ktx")!.innerHTML = "Total Conversion Time " + totalTime.toFixed(2) + " seconds";
 
-      //      document.getElementById("ktx")!.innerHTML += "<br/>Finished KTX2 Conversion, fixing..."
+            //      document.getElementById("ktx")!.innerHTML += "<br/>Finished KTX2 Conversion, fixing..."
 
             console.log("Finished KTX2 Conversion, fixing...");
 
@@ -884,18 +968,18 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
             console.log("The correction took " + ((Date.now() - timer) * 0.001).toFixed(2) + " seconds");
             //  console.log(inspect(doc));
-        //    document.getElementById("ktx")!.innerHTML += " " + ((Date.now() - timer) * 0.001).toFixed(2) + " seconds."
-            document.getElementById("ktx")!.innerHTML += "<br/> Done!"
-       
+            //    document.getElementById("ktx")!.innerHTML += " " + ((Date.now() - timer) * 0.001).toFixed(2) + " seconds."
+            document.getElementById("ktx")!.innerHTML += "<br/> Done!";
+
             //
             this._scene.onPointerObservable.addOnce(function () {
                 setTimeout(() => {
-                    document.getElementById("ktx-container")!.style.display = "none"
+                    document.getElementById("ktx-container")!.style.display = "none";
                 }, 3000);
             });
             //
         }
-//
+        //
         if (this.props.globalState.textureValue !== "Keep Original" && this.props.globalState.textureValue !== "ktx2") {
             myOptions = { targetFormat: this.props.globalState.textureValue };
             myFunc = textureCompress(myOptions as any);
