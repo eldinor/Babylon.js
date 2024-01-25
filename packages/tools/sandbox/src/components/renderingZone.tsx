@@ -29,7 +29,7 @@ import { MeshoptEncoder, MeshoptSimplifier } from "meshoptimizer";
 
 // import {DracoDecoderModule} from "draco3dgltf";
 //@ts-ignore
-import { inspect, textureCompress, dedup, join, weld, prune, resample, instance, quantize, reorder, simplify, flatten, meshopt } from "@gltf-transform/functions";
+import { inspect, textureCompress, dedup, join, weld, prune, resample, instance, quantize, reorder, simplify, flatten, meshopt, listTextureSlots } from "@gltf-transform/functions";
 import { Viewport } from "core/Maths/math.viewport";
 // import { compareImages } from "../tools/compareImages";
 
@@ -786,12 +786,16 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             texMode = false
         }
 
-        if (this.props.globalState.textureValue == "ktx2/UASTC" || this.props.globalState.textureValue == "ktx2/ETC1S") {
+        if (this.props.globalState.textureValue == "ktx2/UASTC" || this.props.globalState.textureValue == "ktx2/ETC1S" || this.props.globalState.textureValue == "ktx2/MIX") {
             //   console.log("KTX2");
 
             //   console.log(this.props.globalState);
             document.getElementById("ktx-container")!.style.display = "initial"
-            document.getElementById("ktx")!.innerHTML = "Starting KTX2 Conversion";
+            document.getElementById("ktx")!.innerHTML = "Starting KTX2 Conversion...";
+            
+            if(this.props.globalState.textureValue == "ktx2/MIX"){
+                document.getElementById("ktx")!.innerHTML += "<br/> In the MIX mode albedo (baseColor) textures are compressed with ETC1S, texture from all other channels are processed with UASTC.";
+            }
 
             if (this.props.globalState.resizeValue !== "No Resize") {
                 myOptions = { resize: [Number(this.props.globalState.resizeValue), Number(this.props.globalState.resizeValue)] };
@@ -821,7 +825,22 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 if(mt.includes("png")){
                     texType = 1
                 }
-                
+                //
+                //
+                if(this.props.globalState.textureValue == "ktx2/MIX"){
+                const slots = listTextureSlots(tex);
+                console.log(slots)
+
+                for(const slot of slots){
+                    if (slot.includes("baseColor")){
+                        texMode = false
+                    }
+                    else {texMode = true}
+                }
+
+            }
+//
+//
 
                 if (img) {
                     let imgKTX = await ktx.encodeToKTX2(img.buffer, {
@@ -841,6 +860,9 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
                 console.log(tex.getName());
                 console.log(tex.getSize()![0] + " * " + tex.getSize()![1]);
+
+
+
 
             //    document.getElementById("ktx")!.innerHTML = "Texture " + texIndex + tex.getName();
              //   document.getElementById("ktx")!.innerHTML += tex.getSize()![0] + " * " + tex.getSize()![1];
