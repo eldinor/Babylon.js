@@ -302,12 +302,11 @@ export class Sandbox extends React.Component<ISandboxProps, { isFooterVisible: b
                         <ReflectorZone globalState={this._globalState} expanded={!this.state.isFooterVisible} />
                     ) : (
                         <RenderingZone
-                            globalState={this._globalState}
-                            assetUrl={this._assetUrl}
-                            autoRotate={this._autoRotate}
-                            cameraPosition={this._cameraPosition}
-                            expanded={!this.state.isFooterVisible}
-                        />
+                                globalState={this._globalState}
+                                assetUrl={this._assetUrl}
+                                autoRotate={this._autoRotate}
+                                cameraPosition={this._cameraPosition}
+                                expanded={!this.state.isFooterVisible} reimport={false} reimportMessage={""}                        />
                     )}
                 </span>
                 <div

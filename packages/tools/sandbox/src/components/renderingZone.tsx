@@ -23,7 +23,7 @@ import { Texture } from "core/Materials/Textures/texture";
 import { PBRMaterial } from "core/Materials/PBR/pbrMaterial";
 //
 import { WebIO, Logger, ImageUtils } from "@gltf-transform/core";
-import { ALL_EXTENSIONS } from "@gltf-transform/extensions";
+import { ALL_EXTENSIONS, KHRTextureBasisu } from "@gltf-transform/extensions";
 //@ts-ignore
 import { MeshoptEncoder, MeshoptSimplifier } from "meshoptimizer";
 
@@ -37,6 +37,7 @@ import { Pane } from "tweakpane";
 
 import * as ktx from "ktx2-encoder";
 import { ktxfix } from "../tools/ktxfix";
+import { GLTF2Export } from "serializers/glTF/2.0";
 /*
 import {
     KHR_DF_PRIMARIES_BT709,
@@ -68,7 +69,11 @@ interface IRenderingZoneProps {
     autoRotate?: boolean;
     cameraPosition?: Vector3;
     expanded: boolean;
+    reimport:boolean;
+    reimportMessage:string;
 }
+
+
 
 export class RenderingZone extends React.Component<IRenderingZoneProps> {
     private _currentPluginName?: string;
@@ -78,9 +83,11 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
     private _originBlob: Blob;
     // private _originFilename: string;
     private errorNum: number;
+   private reImport: boolean;
 
     public constructor(props: IRenderingZoneProps) {
         super(props);
+       this.reImport = false;
     }
 
     async initEngine() {
@@ -108,6 +115,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         }
 
         this._engine.loadingUIBackgroundColor = "#2A2342";
+        console.log(this.reImport)
 
         //
         //
@@ -118,11 +126,9 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         }
         //
 
-
-      //  console.log("compressionLevel ", this.props.globalState.compressionLevel)
+        //  console.log("compressionLevel ", this.props.globalState.compressionLevel)
         //
         //
-
 
         const getResizeValue = localStorage.getItem("resizeValue");
 
@@ -284,7 +290,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         if (getCompressionLevel) {
             this.props.globalState.compressionLevel = Number(getCompressionLevel);
         } else {
-            this.props.globalState.compressionLevel = 2
+            this.props.globalState.compressionLevel = 2;
         }
         //
         //
@@ -556,11 +562,39 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         delete this._currentPluginName;
         //
         //
+            console.log(this.reImport)
 
-        //    console.log(DracoDecoder)
 
-        //     console.log(this.props.globalState.resizeValue);
 
+        // Add here processing for Draco, ktx extensions and OBJ, BABYLON files
+
+        let camera1 = this._scene.getCameraByName("default camera");
+        let camera2 = this._scene.getCameraByName("default camera");
+
+        let hdrSkyBox = this._scene.getMeshByName("hdrSkyBox");
+        let hdrSkyBox2 = this._scene.getMeshByName("hdrSkyBox2");
+
+        let options = {
+            shouldExportNode: function (node: any) {
+                return node !== camera1 && node !== camera2 && node !== hdrSkyBox && node !== hdrSkyBox2;
+            },
+        };
+        console.log(options);
+        //
+
+        if(this.reImport){
+            const exportScene = await GLTF2Export.GLBAsync(this._scene, "fileName", options)
+            const blob = exportScene.glTFFiles['fileName' + ".glb"];
+
+            console.log(blob)
+
+            this._originBlob = blob as Blob
+            
+        }
+        
+
+        //
+        //  The beginning
         const arr = new Uint8Array(await this._originBlob.arrayBuffer());
         document.getElementById("topLeft")!.innerHTML = this.props.globalState.origFilename;
         document.getElementById("topLeft")!.innerHTML += " | ";
@@ -752,8 +786,8 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             localStorage.setItem("qualityLevel", ev.value.toString());
         });
 
-//
-//
+        //
+        //
         const cpLevelPane = fKTX.addBinding({ compressionLevel: this.props.globalState.compressionLevel }, "compressionLevel", {
             min: 0,
             max: 5,
@@ -765,7 +799,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             this.props.globalState.compressionLevel = ev.value;
             localStorage.setItem("compressionLevel", ev.value.toString());
         });
-
 
         /*
         const compressionLevelPane = fKTX.addBinding({ compressionLevel: this.props.globalState.compressionLevel }, "compressionLevel", {
@@ -867,20 +900,20 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             //   console.log(this.props.globalState);
             document.getElementById("ktx-container")!.style.display = "initial";
             document.getElementById("ktx")!.innerHTML = "Starting KTX2 Conversion...";
-//
-if (this.props.globalState.textureValue == "ktx2/UASTC") {
-    document.getElementById("ktx")!.innerHTML +=
-        "<br/>UASTC is designed for efficient interchange of very high quality GPU texture data while being quickly transcodable to numerous other hardware GPU texture formats. ";
-}
+            //
+            if (this.props.globalState.textureValue == "ktx2/UASTC") {
+                document.getElementById("ktx")!.innerHTML +=
+                    "<br/>UASTC is designed for efficient interchange of very high quality GPU texture data while being quickly transcodable to numerous other hardware GPU texture formats. ";
+            }
 
-if (this.props.globalState.textureValue == "ktx2/ETC1S") {
-    document.getElementById("ktx")!.innerHTML +=
-        "<br/>ETC1S is the original low/medium quality mode, producing lower file size but with lower quality in comparison with UASTC. To use ETC1S only on albedo textures choose <strong>ktx2/MIX</strong> Texture Format.";
-}
+            if (this.props.globalState.textureValue == "ktx2/ETC1S") {
+                document.getElementById("ktx")!.innerHTML +=
+                    "<br/>ETC1S is the original low/medium quality mode, producing lower file size but with lower quality in comparison with UASTC. To use ETC1S only on albedo textures choose <strong>ktx2/MIX</strong> Texture Format.";
+            }
 
             if (this.props.globalState.textureValue == "ktx2/MIX") {
                 document.getElementById("ktx")!.innerHTML +=
-                    "<br/> In the MIX mode albedo (baseColor) textures are processed with ETC1S.<br/> Texture from all other channels are compressed with UASTC.";
+                    "<br/> In the MIX mode albedo (baseColor) textures are processed with ETC1S.<br/> Textures from all other channels are compressed with UASTC.";
             }
 
             if (this.props.globalState.resizeValue !== "No Resize") {
@@ -892,8 +925,8 @@ if (this.props.globalState.textureValue == "ktx2/ETC1S") {
             //
             // START KTX
 
-             console.log("Starting KTX2 Conversion");
-         //    console.log("compressionLevel ", this.props.globalState.compressionLevel)
+            console.log("Starting KTX2 Conversion");
+            //    console.log("compressionLevel ", this.props.globalState.compressionLevel)
 
             let totalTime = 0;
             let timer = 0;
@@ -954,6 +987,8 @@ if (this.props.globalState.textureValue == "ktx2/ETC1S") {
                 console.log(((Date.now() - timer) * 0.001).toFixed(2) + " seconds");
                 totalTime += Number(((Date.now() - timer) * 0.001).toFixed(2));
             }
+
+            doc.createExtension(KHRTextureBasisu).setRequired(true);
 
             console.log("Total Conversion Time " + totalTime.toFixed(2) + " seconds");
 
@@ -1210,26 +1245,28 @@ if (this.props.globalState.textureValue == "ktx2/ETC1S") {
                     }
                 });
 
-                /*
                 loader.onParsedObservable.add((gltfBabylon) => {
-                    console.log((gltfBabylon.json as any));
+
+                    this.reImport = false
+                    console.log(gltfBabylon.json as any);
                     console.log((gltfBabylon.json as any).extensionsRequired);
-                    if( (gltfBabylon.json as any).extensionsRequired) {
-                    (gltfBabylon.json as any).extensionsRequired.forEach((element:any ) => {
-
-                        console.log(element)
-                            if(element.includes("webp")) {
-                                console.log("WEBP")
+                    if ((gltfBabylon.json as any).extensionsRequired) {
+                        (gltfBabylon.json as any).extensionsRequired.forEach((element: any) => {
+                            console.log(element);
+                            if (element.includes("webp")) {
+                                console.log("WEBP");
                             }
-                            if(element.includes("draco")) {
-                                console.log("DRACO")
-                                
+                            if (element.includes("draco")) {
+                                console.log("DRACO");
+                               this.reImport = true
                             }
-                    })
-                }
-
+                            if (element.includes("basis")) {
+                                console.log("BASIS");
+                               this.reImport = true
+                            }
+                        });
+                    }
                 });
-                */
             }
         });
 
