@@ -199,13 +199,14 @@ export class Sandbox extends React.Component<ISandboxProps, { isFooterVisible: b
                 <div id="topBar">
                     <div className="row">
                         <div className="column" id="topLeft">
-                            Original Size
+                            Original Size 
                         </div>
                         <div className="column" id="topRight">
                             Converted Size
                         </div>
                     </div>
                     <div id="topInfo"></div>
+                    <div id="topInfo2"></div>
                 </div>
 
                 <div id="ktx-container">

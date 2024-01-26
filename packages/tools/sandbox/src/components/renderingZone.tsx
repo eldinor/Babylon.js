@@ -69,11 +69,9 @@ interface IRenderingZoneProps {
     autoRotate?: boolean;
     cameraPosition?: Vector3;
     expanded: boolean;
-    reimport:boolean;
-    reimportMessage:string;
+    reimport: boolean;
+    reimportMessage: string;
 }
-
-
 
 export class RenderingZone extends React.Component<IRenderingZoneProps> {
     private _currentPluginName?: string;
@@ -83,11 +81,11 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
     private _originBlob: Blob;
     // private _originFilename: string;
     private errorNum: number;
-   private reImport: boolean;
+    private reImport: boolean;
 
     public constructor(props: IRenderingZoneProps) {
         super(props);
-       this.reImport = false;
+        this.reImport = false;
     }
 
     async initEngine() {
@@ -115,7 +113,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         }
 
         this._engine.loadingUIBackgroundColor = "#2A2342";
-        console.log(this.reImport)
+        //     console.log(this.reImport)
 
         //
         //
@@ -562,9 +560,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         delete this._currentPluginName;
         //
         //
-            console.log(this.reImport)
-
-
+   //     console.log(this.reImport);
 
         // Add here processing for Draco, ktx extensions and OBJ, BABYLON files
 
@@ -579,19 +575,17 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 return node !== camera1 && node !== camera2 && node !== hdrSkyBox && node !== hdrSkyBox2;
             },
         };
-        console.log(options);
+    //    console.log(options);
         //
 
-        if(this.reImport){
-            const exportScene = await GLTF2Export.GLBAsync(this._scene, "fileName", options)
-            const blob = exportScene.glTFFiles['fileName' + ".glb"];
+        if (this.reImport) {
+            const exportScene = await GLTF2Export.GLBAsync(this._scene, "fileName", options);
+            const blob = exportScene.glTFFiles["fileName" + ".glb"];
 
-            console.log(blob)
+    //        console.log(blob);
 
-            this._originBlob = blob as Blob
-            
+            this._originBlob = blob as Blob;
         }
-        
 
         //
         //  The beginning
@@ -608,6 +602,8 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         //   console.log(inspect(doc));
         let totalVRAM = 0;
+        let hasKTX = false;
+
         doc.getRoot()
             .listTextures()
             .forEach((tex) => {
@@ -615,7 +611,23 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
                 //  console.log("VRAM: " + vram)
                 totalVRAM += vram!;
+
+                if (tex.getMimeType().includes("ktx")) {
+                    hasKTX = true;
+                }
             });
+
+        if (hasKTX) {
+            console.log("KTX FOUND!!!");
+            this.props.globalState.resizeValue = "No Resize";
+            this.props.globalState.textureValue = "Keep Original";
+            document.getElementById("topInfo2")!.style.display = "block";
+            document.getElementById("topInfo2")!.innerHTML += "KTX Texture detected. <br/>Texture settings changed to No Resize and Keep Original format.<br/> ";
+            setTimeout(() => {
+                document.getElementById("topInfo2")!.style.display = "none";
+                document.getElementById("topInfo2")!.innerHTML = "";
+            }, 4000);
+        }
 
         //    console.log("TOTAL VRAM " + niceBytes(totalVRAM))
 
@@ -1236,37 +1248,42 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                         //    console.log(results);
                         //    console.log("errorNum ", this.errorNum);
                         document.getElementById("topInfo")!.style.display = "block";
+
                         document.getElementById("topInfo")!.innerHTML = "Found <strong>" + this.errorNum + "</strong> validation errors." + "<br/>" + "Hope to correct...";
                         document.getElementById("topInfo")!.innerHTML += "<br/><small>" + "Click Inspector button to toggle Inspector.</small>";
-
                         setTimeout(() => {
                             document.getElementById("topInfo")!.style.display = "none";
-                        }, 3000);
+                        }, 4000);
                     }
                 });
 
                 loader.onParsedObservable.add((gltfBabylon) => {
-
-                    this.reImport = false
-                    console.log(gltfBabylon.json as any);
-                    console.log((gltfBabylon.json as any).extensionsRequired);
+                    this.reImport = false;
+                    //    console.log(gltfBabylon.json as any);
+                    //    console.log((gltfBabylon.json as any).extensionsRequired);
                     if ((gltfBabylon.json as any).extensionsRequired) {
                         (gltfBabylon.json as any).extensionsRequired.forEach((element: any) => {
-                            console.log(element);
+                            //     console.log(element);
                             if (element.includes("webp")) {
-                                console.log("WEBP");
+                                //         console.log("WEBP");
                             }
                             if (element.includes("draco")) {
-                                console.log("DRACO");
-                               this.reImport = true
-                            }
-                            if (element.includes("basis")) {
-                                console.log("BASIS");
-                               this.reImport = true
+                                //       console.log("DRACO");
+                                this.reImport = true;
+
+                                document.getElementById("topInfo2")!.style.display = "block";
+                                document.getElementById("topInfo2")!.innerHTML = "DRACO Compression detected. Uncompressing...<br/> ";
+                                setTimeout(() => {
+                                    document.getElementById("topInfo2")!.style.display = "none";
+                                    document.getElementById("topInfo2")!.innerHTML = "";
+                                }, 3000);
                             }
                         });
                     }
                 });
+                //
+
+                //
             }
         });
 
