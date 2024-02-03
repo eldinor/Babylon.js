@@ -361,6 +361,8 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             const filesToLoad = filesInput.filesToLoad;
             if (filesToLoad.length === 1) {
                 const fileName = (filesToLoad[0] as any).correctName;
+
+   
                 if (isTextureAsset(fileName)) {
                     return Promise.resolve(this.loadTextureAsset(`file:${fileName}`));
                 }
@@ -371,9 +373,30 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             //
             this._originBlob = new Blob([filesToLoad[0]]);
 
+            console.log(filesToLoad)
+
             //   console.log("filesToLoad[0]", filesToLoad[0] )
 
             this.props.globalState.origFilename = (filesToLoad[0] as any).correctName;
+
+            if(this.props.globalState.origFilename.includes(".gltf")){
+          //      console.log("INCLUDES GLTF")
+                this.reImport = true
+            }
+
+
+            if(this.props.globalState.origFilename.includes(".obj")){
+                console.log("OBJ DETECTED")
+                document.getElementById("topInfo2")!.style.display = "block";
+                document.getElementById("topInfo2")!.innerHTML += "For OBJ files the pixel comparison function has no sense due to the different character of materials.<br/> ";
+                setTimeout(() => {
+                    document.getElementById("topInfo2")!.style.display = "none";
+                    document.getElementById("topInfo2")!.innerHTML = "";
+                }, 4000);
+            }
+
+
+
             /*
            let extension = this._originFilename.split('.').pop();
            console.log(extension)
@@ -548,6 +571,26 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         this.prepareLighting();
         this.handleErrors();
 
+        this._scene.onPointerObservable.add(function (ev) {
+          //  console.log(ev);
+            //    document.getElementById("ktx-container")!.style.display = "none";
+
+            if (ev.type == 1) {
+             //   console.log("CLICK");
+                if (document.getElementById("settings-container")) {
+                    if (document.getElementById("settings-container")!.style.display !== "none") {
+                        document.getElementById("settings-container")!.style.display = "none";
+                    }
+                }
+
+                if (document.getElementById("help-container")) {
+                    if (document.getElementById("help-container")!.style.display !== "none") {
+                        document.getElementById("help-container")!.style.display = "none";
+                    }
+                }
+            } //
+        });
+
         if (this._scene.getMeshByName("hdrSkyBox")) {
             const hdrSkyBox2 = (this._scene.getMeshByName("hdrSkyBox") as any).createInstance("hdrSkyBox2");
             hdrSkyBox2.layerMask = 0x20000000;
@@ -560,7 +603,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         delete this._currentPluginName;
         //
         //
-   //     console.log(this.reImport);
+        //     console.log(this.reImport);
 
         // Add here processing for Draco, ktx extensions and OBJ, BABYLON files
 
@@ -575,14 +618,14 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 return node !== camera1 && node !== camera2 && node !== hdrSkyBox && node !== hdrSkyBox2;
             },
         };
-    //    console.log(options);
+        //    console.log(options);
         //
 
         if (this.reImport) {
             const exportScene = await GLTF2Export.GLBAsync(this._scene, "fileName", options);
             const blob = exportScene.glTFFiles["fileName" + ".glb"];
 
-    //        console.log(blob);
+            //        console.log(blob);
 
             this._originBlob = blob as Blob;
         }
@@ -1056,7 +1099,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         await doc.transform(
             //   dedup(),
 
-            ...transformsArray
+            ...transformsArray,
 
             //   backfaceCulling({ cull: false })
 
@@ -1074,7 +1117,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             //      meshopt({encoder: MeshoptEncoder, level: 'medium'})
 
             //   simplify({ simplifier: MeshoptSimplifier, ratio: 0.75, error: 0.001 }),
-            //   instance({ min: 2 }),
+             //  instance({ min: 2 }),
             //  textureCompress({
             //   targetFormat: "webp",
             //, resize: [1024, 1024]
@@ -1228,24 +1271,56 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         // Setting up some GLTF values
         GLTFFileLoader.IncrementalLoading = false;
         this.props.globalState.glTFLoaderExtensions = {};
+
+        let GLTFChecker = false;
+
         SceneLoader.OnPluginActivatedObservable.add((plugin) => {
             this._currentPluginName = plugin.name;
+
+      //    console.log(plugin);
+
+      this.reImport = false
+      if(this.props.globalState.origFilename.includes(".gltf")){
+        //      console.log("INCLUDES GLTF")
+              this.reImport = true
+          }
+
+
+
+            // || this._currentPluginName === "babylon.js"
+            if (this._currentPluginName === "obj") {
+                this.reImport = true;
+            }
+
             if (this._currentPluginName === "gltf") {
                 const loader = plugin as GLTFFileLoader;
                 loader.transparencyAsCoverage = this.props.globalState.commerceMode;
                 loader.validate = true;
+                if(this.props.globalState.origFilename.includes(".gltf")) {
+                    loader.validate = false;
+                }
+                
 
                 loader.onExtensionLoadedObservable.add((extension: import("loaders/glTF/index").IGLTFLoaderExtension) => {
                     this.props.globalState.glTFLoaderExtensions[extension.name] = extension;
                 });
 
                 loader.onValidatedObservable.add((results) => {
+                  //  console.log(results);
+                //    console.log(results.uri);
+
+                    if(results.uri.includes(".gltf")){
+                        console.log("DSFMKSDFLKSJDFDSFDSFSLKSJDFs")
+                        console.log (GLTFChecker)
+                    }
+
+
                     if (results.issues.numErrors > 0 && !this.props.globalState.textureValue.includes("ktx2")) {
                         this.props.globalState.showDebugLayer();
                         this.errorNum = results.issues.numErrors;
                         //    console.log(results.issues);
                         //    console.log(results.info);
-                        //    console.log(results);
+                            console.log(results);
                         //    console.log("errorNum ", this.errorNum);
                         document.getElementById("topInfo")!.style.display = "block";
 
@@ -1258,8 +1333,10 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 });
 
                 loader.onParsedObservable.add((gltfBabylon) => {
-                    this.reImport = false;
-                    //    console.log(gltfBabylon.json as any);
+
+              //      console.log(loader)
+               // this.reImport = true;
+               //       console.log(gltfBabylon.json as any);
                     //    console.log((gltfBabylon.json as any).extensionsRequired);
                     if ((gltfBabylon.json as any).extensionsRequired) {
                         (gltfBabylon.json as any).extensionsRequired.forEach((element: any) => {
@@ -1307,17 +1384,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
     }
 }
 
-export function formatBytes(bytes: number, decimals = 0) {
-    if (!+bytes) return "0 Bytes";
-
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ["Bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"];
-
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
-}
 
 export function niceBytes(z: number) {
     const units = ["bytes", "Kb", "Mb", "Gb", "Tb"];

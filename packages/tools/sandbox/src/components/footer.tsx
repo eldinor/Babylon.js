@@ -60,7 +60,7 @@ export class Footer extends React.Component<IFooterProps> {
 
             const link = document.createElement("a");
             link.href = this.props.globalState.optURL;
-            link.download = this.props.globalState.origFilename.replace(/\.[^/.]+$/, "") + "-webp.glb";
+            link.download = this.props.globalState.origFilename.replace(/\.[^/.]+$/, "") + "-opt"+".glb";
             link.click();
         }
     }
