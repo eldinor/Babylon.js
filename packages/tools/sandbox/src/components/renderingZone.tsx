@@ -280,11 +280,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         let getCompressionLevel = localStorage.getItem("compressionLevel");
 
-        /*
-        if (isNaN(getCompressionLevel as any)) {
-            getCompressionLevel = "2"
-          }
-*/
+
         if (getCompressionLevel) {
             this.props.globalState.compressionLevel = Number(getCompressionLevel);
         } else {
@@ -371,19 +367,22 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             this._engine.clearInternalTexturesCache();
             //
             //
-            this._originBlob = new Blob([filesToLoad[0]]);
+            this._originBlob = new Blob(filesToLoad);
 
-            console.log(filesToLoad)
-
-            //   console.log("filesToLoad[0]", filesToLoad[0] )
+       //     console.log(filesToLoad)
 
             this.props.globalState.origFilename = (filesToLoad[0] as any).correctName;
 
-            if(this.props.globalState.origFilename.includes(".gltf")){
-          //      console.log("INCLUDES GLTF")
-                this.reImport = true
+            for(let i = 0; i<filesToLoad.length;i++){
+                if((filesToLoad[i] as any).correctName.includes(".gltf")){
+                    this.props.globalState.origFilename = (filesToLoad[i] as any).correctName
+                    this.reImport = true
+                }
+                if((filesToLoad[i] as any).correctName.includes(".obj")){
+                    this.props.globalState.origFilename = (filesToLoad[i] as any).correctName
+                    this.reImport = true
+                }
             }
-
 
             if(this.props.globalState.origFilename.includes(".obj")){
                 console.log("OBJ DETECTED")
@@ -1176,7 +1175,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             element.layerMask = 0x20000000;
         });
         //
-
+        console.log("Memory Used: ", niceBytes((window.performance as any).memory.usedJSHeapSize))
         //
         //
     }
@@ -1228,7 +1227,17 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         this._engine.clearInternalTexturesCache();
 
-        const promise = isTextureAsset(assetUrl) ? Promise.resolve(this.loadTextureAsset(assetUrl)) : SceneLoader.LoadAsync(rootUrl, fileName, this._engine);
+       // const promise = isTextureAsset(assetUrl) ? Promise.resolve(this.loadTextureAsset(assetUrl)) : SceneLoader.LoadAsync(rootUrl, fileName, this._engine);
+       
+       const promise = isTextureAsset(assetUrl) ? Promise.resolve(this.loadTextureAsset(assetUrl)) : SceneLoader.LoadAsync(rootUrl, fileName, this._engine);
+       
+       
+       
+       
+       
+       console.log(fileName)
+
+
 
         promise
             .then((scene) => {
@@ -1238,7 +1247,11 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
                 this._scene = scene;
 
+
+                
+
                 this.onSceneLoaded(fileName);
+       
 
                 scene.whenReadyAsync().then(() => {
                     this._engine.runRenderLoop(() => {
@@ -1320,7 +1333,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                         this.errorNum = results.issues.numErrors;
                         //    console.log(results.issues);
                         //    console.log(results.info);
-                            console.log(results);
+                        //    console.log(results);
                         //    console.log("errorNum ", this.errorNum);
                         document.getElementById("topInfo")!.style.display = "block";
 
@@ -1397,3 +1410,14 @@ export function niceBytes(z: number) {
 
     return n.toFixed(2) + " " + units[l];
 }
+
+/*
+async function loadFromMemory(path:string, scene:Scene, blobProp:Blob){
+    const assetArrayBuffer =  await Tools.LoadFileAsync(path, true);
+  
+      const assetBlob = new Blob([assetArrayBuffer]);
+      const assetUrl = URL.createObjectURL(assetBlob);
+      SceneLoader.AppendAsync(assetUrl, undefined, scene, undefined, ".glb");
+      blobProp = assetBlob as Blob;
+}
+*/
