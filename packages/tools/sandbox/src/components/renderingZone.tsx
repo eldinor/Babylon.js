@@ -82,10 +82,12 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
     // private _originFilename: string;
     private errorNum: number;
     private reImport: boolean;
+    private isGPUinstanced: boolean;
 
     public constructor(props: IRenderingZoneProps) {
         super(props);
         this.reImport = false;
+        this.isGPUinstanced = false;
     }
 
     async initEngine() {
@@ -280,7 +282,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         let getCompressionLevel = localStorage.getItem("compressionLevel");
 
-
         if (getCompressionLevel) {
             this.props.globalState.compressionLevel = Number(getCompressionLevel);
         } else {
@@ -358,7 +359,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             if (filesToLoad.length === 1) {
                 const fileName = (filesToLoad[0] as any).correctName;
 
-   
                 if (isTextureAsset(fileName)) {
                     return Promise.resolve(this.loadTextureAsset(`file:${fileName}`));
                 }
@@ -369,23 +369,23 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             //
             this._originBlob = new Blob(filesToLoad);
 
-       //     console.log(filesToLoad)
+            //     console.log(filesToLoad)
 
             this.props.globalState.origFilename = (filesToLoad[0] as any).correctName;
 
-            for(let i = 0; i<filesToLoad.length;i++){
-                if((filesToLoad[i] as any).correctName.includes(".gltf")){
-                    this.props.globalState.origFilename = (filesToLoad[i] as any).correctName
-                    this.reImport = true
+            for (let i = 0; i < filesToLoad.length; i++) {
+                if ((filesToLoad[i] as any).correctName.includes(".gltf")) {
+                    this.props.globalState.origFilename = (filesToLoad[i] as any).correctName;
+                    this.reImport = true;
                 }
-                if((filesToLoad[i] as any).correctName.includes(".obj")){
-                    this.props.globalState.origFilename = (filesToLoad[i] as any).correctName
-                    this.reImport = true
+                if ((filesToLoad[i] as any).correctName.includes(".obj")) {
+                    this.props.globalState.origFilename = (filesToLoad[i] as any).correctName;
+                    this.reImport = true;
                 }
             }
 
-            if(this.props.globalState.origFilename.includes(".obj")){
-                console.log("OBJ DETECTED")
+            if (this.props.globalState.origFilename.includes(".obj")) {
+                console.log("OBJ DETECTED");
                 document.getElementById("topInfo2")!.style.display = "block";
                 document.getElementById("topInfo2")!.innerHTML += "For OBJ files the pixel comparison function has no sense due to the different character of materials.<br/> ";
                 setTimeout(() => {
@@ -393,8 +393,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                     document.getElementById("topInfo2")!.innerHTML = "";
                 }, 4000);
             }
-
-
 
             /*
            let extension = this._originFilename.split('.').pop();
@@ -571,11 +569,11 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         this.handleErrors();
 
         this._scene.onPointerObservable.add(function (ev) {
-          //  console.log(ev);
+            //  console.log(ev);
             //    document.getElementById("ktx-container")!.style.display = "none";
 
             if (ev.type == 1) {
-             //   console.log("CLICK");
+                //   console.log("CLICK");
                 if (document.getElementById("settings-container")) {
                     if (document.getElementById("settings-container")!.style.display !== "none") {
                         document.getElementById("settings-container")!.style.display = "none";
@@ -1088,6 +1086,13 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             transformsArray.push(myFunc);
         }
 
+        if (!this.isGPUinstanced) {
+            transformsArray.push(instance());
+          //  doc.createExtension(EXTMeshGPUInstancing).setRequired(true);
+        }
+
+        // console.log(transformsArray)
+
         //  transformsArray.push(textureCompress({   targetFormat: "webp"}))
         //      console.log(transformsArray);
         //
@@ -1098,7 +1103,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         await doc.transform(
             //   dedup(),
 
-            ...transformsArray,
+            ...transformsArray
 
             //   backfaceCulling({ cull: false })
 
@@ -1116,7 +1121,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             //      meshopt({encoder: MeshoptEncoder, level: 'medium'})
 
             //   simplify({ simplifier: MeshoptSimplifier, ratio: 0.75, error: 0.001 }),
-             //  instance({ min: 2 }),
+            // instance({ min: 2 }),
             //  textureCompress({
             //   targetFormat: "webp",
             //, resize: [1024, 1024]
@@ -1175,7 +1180,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             element.layerMask = 0x20000000;
         });
         //
-        console.log("Memory Used: ", niceBytes((window.performance as any).memory.usedJSHeapSize))
+        console.log("Memory Used: ", niceBytes((window.performance as any).memory.usedJSHeapSize));
         //
         //
     }
@@ -1227,17 +1232,11 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         this._engine.clearInternalTexturesCache();
 
-       // const promise = isTextureAsset(assetUrl) ? Promise.resolve(this.loadTextureAsset(assetUrl)) : SceneLoader.LoadAsync(rootUrl, fileName, this._engine);
-       
-       const promise = isTextureAsset(assetUrl) ? Promise.resolve(this.loadTextureAsset(assetUrl)) : SceneLoader.LoadAsync(rootUrl, fileName, this._engine);
-       
-       
-       
-       
-       
-       console.log(fileName)
+        // const promise = isTextureAsset(assetUrl) ? Promise.resolve(this.loadTextureAsset(assetUrl)) : SceneLoader.LoadAsync(rootUrl, fileName, this._engine);
 
+        const promise = isTextureAsset(assetUrl) ? Promise.resolve(this.loadTextureAsset(assetUrl)) : SceneLoader.LoadAsync(rootUrl, fileName, this._engine);
 
+        console.log(fileName);
 
         promise
             .then((scene) => {
@@ -1247,11 +1246,11 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
                 this._scene = scene;
 
+                //  loadFromMemory(rootUrl + fileName, scene, this._originBlob)
 
-                
+                //   this.reImport = true
 
                 this.onSceneLoaded(fileName);
-       
 
                 scene.whenReadyAsync().then(() => {
                     this._engine.runRenderLoop(() => {
@@ -1285,20 +1284,18 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         GLTFFileLoader.IncrementalLoading = false;
         this.props.globalState.glTFLoaderExtensions = {};
 
-        let GLTFChecker = false;
+        //    let GLTFChecker = false;
 
         SceneLoader.OnPluginActivatedObservable.add((plugin) => {
             this._currentPluginName = plugin.name;
 
-      //    console.log(plugin);
+            //    console.log(plugin);
 
-      this.reImport = false
-      if(this.props.globalState.origFilename.includes(".gltf")){
-        //      console.log("INCLUDES GLTF")
-              this.reImport = true
-          }
-
-
+            this.reImport = false;
+            if (this.props.globalState.origFilename.includes(".gltf")) {
+                //      console.log("INCLUDES GLTF")
+                this.reImport = true;
+            }
 
             // || this._currentPluginName === "babylon.js"
             if (this._currentPluginName === "obj") {
@@ -1309,24 +1306,21 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 const loader = plugin as GLTFFileLoader;
                 loader.transparencyAsCoverage = this.props.globalState.commerceMode;
                 loader.validate = true;
-                if(this.props.globalState.origFilename.includes(".gltf")) {
+                if (this.props.globalState.origFilename.includes(".gltf")) {
                     loader.validate = false;
                 }
-                
 
                 loader.onExtensionLoadedObservable.add((extension: import("loaders/glTF/index").IGLTFLoaderExtension) => {
                     this.props.globalState.glTFLoaderExtensions[extension.name] = extension;
                 });
 
                 loader.onValidatedObservable.add((results) => {
-                  //  console.log(results);
-                //    console.log(results.uri);
+                    //  console.log(results);
+                    //    console.log(results.uri);
 
-                    if(results.uri.includes(".gltf")){
-                        console.log("DSFMKSDFLKSJDFDSFDSFSLKSJDFs")
-                        console.log (GLTFChecker)
+                    if (results.uri.includes(".gltf")) {
+ 
                     }
-
 
                     if (results.issues.numErrors > 0 && !this.props.globalState.textureValue.includes("ktx2")) {
                         this.props.globalState.showDebugLayer();
@@ -1346,11 +1340,10 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 });
 
                 loader.onParsedObservable.add((gltfBabylon) => {
-
-              //      console.log(loader)
-               // this.reImport = true;
-               //       console.log(gltfBabylon.json as any);
-                    //    console.log((gltfBabylon.json as any).extensionsRequired);
+                    //      console.log(loader)
+                    // this.reImport = true;
+                    //     console.log(gltfBabylon.json as any);
+                    //       console.log((gltfBabylon.json as any).extensionsRequired);
                     if ((gltfBabylon.json as any).extensionsRequired) {
                         (gltfBabylon.json as any).extensionsRequired.forEach((element: any) => {
                             //     console.log(element);
@@ -1363,6 +1356,22 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
                                 document.getElementById("topInfo2")!.style.display = "block";
                                 document.getElementById("topInfo2")!.innerHTML = "DRACO Compression detected. Uncompressing...<br/> ";
+                                setTimeout(() => {
+                                    document.getElementById("topInfo2")!.style.display = "none";
+                                    document.getElementById("topInfo2")!.innerHTML = "";
+                                }, 3000);
+                            }
+                        });
+                    }
+                    //
+                    if ((gltfBabylon.json as any).extensionsUsed) {
+                        (gltfBabylon.json as any).extensionsUsed.forEach((element: any) => {
+                            if (element.includes("instancing")) {
+                                //       console.log("GPU instancing");
+                                this.isGPUinstanced = true;
+
+                                document.getElementById("topInfo2")!.style.display = "block";
+                                document.getElementById("topInfo2")!.innerHTML = "EXT_mesh_gpu_instancing detected...<br/> ";
                                 setTimeout(() => {
                                     document.getElementById("topInfo2")!.style.display = "none";
                                     document.getElementById("topInfo2")!.innerHTML = "";
@@ -1397,7 +1406,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
     }
 }
 
-
 export function niceBytes(z: number) {
     const units = ["bytes", "Kb", "Mb", "Gb", "Tb"];
     let x = z.toString();
@@ -1412,12 +1420,25 @@ export function niceBytes(z: number) {
 }
 
 /*
-async function loadFromMemory(path:string, scene:Scene, blobProp:Blob){
-    const assetArrayBuffer =  await Tools.LoadFileAsync(path, true);
+async function loadFromMemory(path:string, scene:Scene, blobProp:Blob):Promise<void>{
+
+    return new Promise((resolve) => {
+
+        const assetArrayBuffer =   Tools.LoadFileAsync(path, true);
   
-      const assetBlob = new Blob([assetArrayBuffer]);
-      const assetUrl = URL.createObjectURL(assetBlob);
-      SceneLoader.AppendAsync(assetUrl, undefined, scene, undefined, ".glb");
-      blobProp = assetBlob as Blob;
+        assetArrayBuffer.then((res)=>{
+            const assetBlob = new Blob([res]);
+            blobProp = assetBlob as Blob;
+            const assetUrl = URL.createObjectURL(assetBlob);
+       
+
+       
+        SceneLoader.AppendAsync(assetUrl, undefined, scene, undefined, ".glb");
+       
+    })
+        
+    })
+
+
 }
 */
