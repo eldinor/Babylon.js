@@ -418,6 +418,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 if (this.props.assetUrl) {
                     this.loadAssetFromUrl();
                 } else {
+                    this.isGPUinstanced = false;
                     filesInput.reload();
                 }
             }
@@ -1085,7 +1086,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         if (myFunc) {
             transformsArray.push(myFunc);
         }
-
+        console.log("isGPUinstanced", this.isGPUinstanced)
         if (!this.isGPUinstanced) {
             transformsArray.push(instance());
           //  doc.createExtension(EXTMeshGPUInstancing).setRequired(true);
@@ -1103,7 +1104,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         await doc.transform(
             //   dedup(),
 
-            ...transformsArray
+            ...transformsArray,
 
             //   backfaceCulling({ cull: false })
 
@@ -1121,7 +1122,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             //      meshopt({encoder: MeshoptEncoder, level: 'medium'})
 
             //   simplify({ simplifier: MeshoptSimplifier, ratio: 0.75, error: 0.001 }),
-            // instance({ min: 2 }),
+          //   instance({ min: 2 }),
             //  textureCompress({
             //   targetFormat: "webp",
             //, resize: [1024, 1024]
