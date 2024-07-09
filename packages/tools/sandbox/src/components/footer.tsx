@@ -374,21 +374,11 @@ wireframeMode(){
 
                     <FooterButton globalState={this.props.globalState} icon={iconDash} label="Help Information" onClick={() => this.openHelp()} enabled={true} />
                     <WireFrameButton globalState={this.props.globalState} icon={iconWireframe} label="Wireframe Mode" 
-                    onClick={() =>  this.wireframeMode() } enabled={!!this.props.globalState.currentScene} bgStyle ={this.checkWF()}/>
+                    onClick={() =>  this.wireframeMode() } enabled={!!this.props.globalState.currentScene}/>
 
                 </div>
             </div>
         );
     }
       
-        public checkWF() {
-            console.log("checkWF")
-            
-            if (this.props.globalState.wireframe) {
-                return "red"
-            }
-            else {
-                return "purple"
-            }
-        }
 }
