@@ -1103,7 +1103,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
           //  doc.createExtension(EXTMeshGPUInstancing).setRequired(true);
         }
         //!!!!!!!!!!!!!!!!!!!!!!!!!!! ####################################################!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        transformsArray.push( meshopt({encoder: MeshoptEncoder, level: 'high'}));
+      //  transformsArray.push( meshopt({encoder: MeshoptEncoder, level: 'high'}));
        
         // console.log(transformsArray)
 

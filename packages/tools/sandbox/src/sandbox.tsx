@@ -43,7 +43,7 @@ export class Sandbox extends React.Component<ISandboxProps, { isFooterVisible: b
 
         // Events
         this._globalState.onSceneLoaded.add((info) => {
-            document.title = "Babylon.js - " + info.filename;
+            document.title = "GLB Optimizer - " + info.filename;
             this.setState({ errorMessage: "" });
 
             this._globalState.currentScene = info.scene;
