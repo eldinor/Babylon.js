@@ -8,6 +8,7 @@ import { AnimationBar } from "./animationBar";
 import type { Nullable } from "core/types";
 import type { KHR_materials_variants } from "loaders/glTF/2.0/Extensions/KHR_materials_variants";
 import type { Mesh } from "core/Meshes/mesh";
+import { WireFrameButton } from "./wfButton";
 
 import "../scss/footer.scss";
 // import babylonIdentity from "../img/logo-babylonpress-GB-s.png";
@@ -21,6 +22,7 @@ import iconSkybox from "../img/icon-skybox.svg";
 import iconFullScreen from "../../Assets/icon_Fullscreen.svg";
 import iconTex from "../../Assets/Icon_EditModel.svg";
 import iconDash from "../../Assets/Icon_Dashboard.svg";
+import iconWireframe from "../../Assets/Icon_Wireframe.svg"
 
 import { compareImages } from "../tools/compareImages";
 import { Tools } from "core/Misc/tools";
@@ -34,6 +36,8 @@ export class Footer extends React.Component<IFooterProps> {
     private _cameraNames: string[] = [];
     public resizeOptions: string[] = ["No Resize", "2048", "1024", "512", "256"];
     public textureOptions: string[] = ["Keep Original", "webp", "png", "ktx2/UASTC", "ktx2/ETC1S", "ktx2/MIX"];
+
+
 
     public constructor(props: IFooterProps) {
         super(props);
@@ -165,7 +169,20 @@ export class Footer extends React.Component<IFooterProps> {
     }
 
     //
+wireframeMode(){
+     this.props.globalState.currentScene.forceWireframe = !this.props.globalState.currentScene.forceWireframe
+     this.props.globalState.wireframe = this.props.globalState.currentScene.forceWireframe;
+     localStorage.setItem("wireframe", this.props.globalState.wireframe.toString());
+     console.log("wf_Mode", this.props.globalState.wireframe.toString())
+    if(this.props.globalState.currentScene.forceWireframe ){
+        this.props.globalState.skybox = false;
+    }
+    else {
+        this.props.globalState.skybox = true
+    }
+}
 
+//
     defineTextureFormat(option: string) {
         //    console.log(option);
         this.props.globalState.textureValue = option;
@@ -356,8 +373,22 @@ export class Footer extends React.Component<IFooterProps> {
                     />
 
                     <FooterButton globalState={this.props.globalState} icon={iconDash} label="Help Information" onClick={() => this.openHelp()} enabled={true} />
+                    <WireFrameButton globalState={this.props.globalState} icon={iconWireframe} label="Wireframe Mode" 
+                    onClick={() =>  this.wireframeMode() } enabled={!!this.props.globalState.currentScene} bgStyle ={this.checkWF()}/>
+
                 </div>
             </div>
         );
     }
+      
+        public checkWF() {
+            console.log("checkWF")
+            
+            if (this.props.globalState.wireframe) {
+                return "red"
+            }
+            else {
+                return "purple"
+            }
+        }
 }

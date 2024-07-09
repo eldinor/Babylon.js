@@ -25,7 +25,7 @@ import { PBRMaterial } from "core/Materials/PBR/pbrMaterial";
 import { WebIO, Logger, ImageUtils } from "@gltf-transform/core";
 import { ALL_EXTENSIONS, KHRTextureBasisu } from "@gltf-transform/extensions";
 //@ts-ignore
-import { MeshoptEncoder, MeshoptSimplifier } from "meshoptimizer";
+import { MeshoptEncoder, MeshoptSimplifier, MeshoptDecoder } from "meshoptimizer";
 
 // import {DracoDecoderModule} from "draco3dgltf";
 //@ts-ignore
@@ -121,9 +121,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         //
 
         //  Prepare optimization props
-        function parseBool(val: any) {
-            return val === true || val === "true";
-        }
+
         //
 
         //  console.log("compressionLevel ", this.props.globalState.compressionLevel)
@@ -569,6 +567,15 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         this.prepareLighting();
         this.handleErrors();
 
+        const getWireframe = localStorage.getItem("wireframe");
+
+        if (getWireframe) {
+            this.props.globalState.wireframe = parseBool(getWireframe);
+            console.log(this.props.globalState.wireframe)
+            this._scene.forceWireframe =  this.props.globalState.wireframe
+            this.props.globalState.skybox = !this._scene.forceWireframe
+        }
+
         this._scene.onPointerObservable.add(function (ev) {
             //  console.log(ev);
             //    document.getElementById("ktx-container")!.style.display = "none";
@@ -635,7 +642,11 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         document.getElementById("topLeft")!.innerHTML += " | ";
         document.getElementById("topLeft")!.innerHTML += "<strong>" + (arr.length / (1024 * 1024)).toFixed(2).toString() + " Mb</strong>";
 
-        const io = new WebIO().registerExtensions(ALL_EXTENSIONS);
+        const io = new WebIO().registerExtensions(ALL_EXTENSIONS)
+        .registerDependencies({
+            		'meshopt.decoder': MeshoptDecoder,
+            		'meshopt.encoder': MeshoptEncoder,
+            	});
 
         const doc = await io.readBinary(arr);
 
@@ -1091,7 +1102,9 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             transformsArray.push(instance());
           //  doc.createExtension(EXTMeshGPUInstancing).setRequired(true);
         }
-
+        //!!!!!!!!!!!!!!!!!!!!!!!!!!! ####################################################!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        transformsArray.push( meshopt({encoder: MeshoptEncoder, level: 'high'}));
+       
         // console.log(transformsArray)
 
         //  transformsArray.push(textureCompress({   targetFormat: "webp"}))
@@ -1119,7 +1132,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             //    weld({ tolerance: 0.001, toleranceNormal: 0.5 }),
 
             //     reorder({ encoder: MeshoptEncoder }),
-            //      meshopt({encoder: MeshoptEncoder, level: 'medium'})
+            //   meshopt({encoder: MeshoptEncoder, level: 'medium'})
 
             //   simplify({ simplifier: MeshoptSimplifier, ratio: 0.75, error: 0.001 }),
           //   instance({ min: 2 }),
@@ -1420,6 +1433,9 @@ export function niceBytes(z: number) {
     return n.toFixed(2) + " " + units[l];
 }
 
+export function parseBool(val: any) {
+    return val === true || val === "true";
+}
 /*
 async function loadFromMemory(path:string, scene:Scene, blobProp:Blob):Promise<void>{
 
