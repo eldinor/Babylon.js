@@ -270,6 +270,23 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         // end Quantize
 
+        const getMeshoptState = localStorage.getItem("meshoptState");
+
+        if (getMeshoptState) {
+            this.props.globalState.meshoptState = parseBool(getMeshoptState);
+        }
+
+        // end meshoptState
+
+        const getMeshoptLevel = localStorage.getItem("meshoptLevel");
+
+        if (getMeshoptLevel) {
+            this.props.globalState.meshoptLevel = getMeshoptLevel;
+        }
+
+        // end meshoptLevel
+        //
+
         const getQualityLevel = localStorage.getItem("qualityLevel");
 
         if (getQualityLevel) {
@@ -571,9 +588,9 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         if (getWireframe) {
             this.props.globalState.wireframe = parseBool(getWireframe);
-            console.log(this.props.globalState.wireframe)
-            this._scene.forceWireframe =  this.props.globalState.wireframe
-            this.props.globalState.skybox = !this._scene.forceWireframe
+            console.log(this.props.globalState.wireframe);
+            this._scene.forceWireframe = this.props.globalState.wireframe;
+            this.props.globalState.skybox = !this._scene.forceWireframe;
         }
 
         this._scene.onPointerObservable.add(function (ev) {
@@ -642,11 +659,10 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         document.getElementById("topLeft")!.innerHTML += " | ";
         document.getElementById("topLeft")!.innerHTML += "<strong>" + (arr.length / (1024 * 1024)).toFixed(2).toString() + " Mb</strong>";
 
-        const io = new WebIO().registerExtensions(ALL_EXTENSIONS)
-        .registerDependencies({
-            		'meshopt.decoder': MeshoptDecoder,
-            		'meshopt.encoder': MeshoptEncoder,
-            	});
+        const io = new WebIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({
+            "meshopt.decoder": MeshoptDecoder,
+            "meshopt.encoder": MeshoptEncoder,
+        });
 
         const doc = await io.readBinary(arr);
 
@@ -788,11 +804,19 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             localStorage.setItem("weldToleranceNormal", ev.value.toString());
         });
 
-        f0.addBlade({
-            view: "separator",
-        });
+        //
 
-        const simplifyPane = f0.addBinding({ Simplify: this.props.globalState.simplifyState }, "Simplify", {
+        //
+
+        //
+
+        //
+        const f1 = pane.addFolder({
+            title: "KHR Extensions - Meshopt",
+        });
+        //
+
+        const simplifyPane = f1.addBinding({ Simplify: this.props.globalState.simplifyState }, "Simplify", {
             label: "Simplify | MeshoptSimplifier",
         });
 
@@ -802,18 +826,12 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             localStorage.setItem("simplifyState", ev.value.toString());
         });
         //
-
-        //
-
-        //
-
-        //
-        const f1 = pane.addFolder({
-            title: "KHR Extensions",
+        f1.addBlade({
+            view: "separator",
         });
-
+        //
         const reorderPane = f1.addBinding({ Reorder: this.props.globalState.reorderState }, "Reorder", {
-            label: "Reorder | EXT_meshopt_compression",
+            label: "Reorder | Pre-process for Meshopt Compression",
         });
 
         reorderPane.on("change", (ev) => {
@@ -833,6 +851,41 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             this.props.globalState.quantizeState = ev.value;
             localStorage.setItem("quantizeState", ev.value.toString());
         });
+        //
+        f1.addFolder({
+            title: "Attention! Turn off Reorder and Quantize when select Meshopt",
+            expanded: false,
+        });
+        //
+
+        //
+        const meshoptPane = f1.addBinding({ Meshopt_Compression: this.props.globalState.meshoptState }, "Meshopt_Compression", {
+            label: "Meshopt | EXT_meshopt_compression",
+        });
+
+        meshoptPane.on("change", (ev) => {
+            console.log("meshoptPane ", ev.value);
+            this.props.globalState.meshoptState = ev.value;
+            localStorage.setItem("meshoptState", ev.value.toString());
+        });
+        //
+        //@ts-ignore
+        const meshoptLevel = f1.addBlade({
+            view: "list",
+            label: "Compression Level",
+            options: [
+                { text: "high", value: "high" },
+                { text: "medium", value: "medium" },
+            ],
+            value: this.props.globalState.meshoptLevel,
+        });
+        //@ts-ignore
+        meshoptLevel.on("change", (ev) => {
+            console.log("meshoptLevel ", ev.value);
+            this.props.globalState.meshoptLevel = ev.value;
+            localStorage.setItem("meshoptLevel", ev.value.toString());
+        });
+        //
         //
         const fKTX = pane.addFolder({
             title: "KTX2 Compression",
@@ -942,7 +995,15 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         if (this.props.globalState.quantizeState) {
             transformsArray.push(quantize());
         }
-
+        if (this.props.globalState.meshoptState) {
+            if (this.props.globalState.meshoptLevel === "high") {
+                transformsArray.push(meshopt({ encoder: MeshoptEncoder, level: "high" }));
+                console.log("HIGH");
+            } else {
+                transformsArray.push(meshopt({ encoder: MeshoptEncoder, level: "medium" }));
+                console.log("MEDIUM");
+            }
+        }
         //
         //
 
@@ -1097,14 +1158,14 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         if (myFunc) {
             transformsArray.push(myFunc);
         }
-        console.log("isGPUinstanced", this.isGPUinstanced)
+        console.log("isGPUinstanced", this.isGPUinstanced);
         if (!this.isGPUinstanced) {
             transformsArray.push(instance());
-          //  doc.createExtension(EXTMeshGPUInstancing).setRequired(true);
+            //  doc.createExtension(EXTMeshGPUInstancing).setRequired(true);
         }
         //!!!!!!!!!!!!!!!!!!!!!!!!!!! ####################################################!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      //  transformsArray.push( meshopt({encoder: MeshoptEncoder, level: 'high'}));
-       
+        //  transformsArray.push( meshopt({encoder: MeshoptEncoder, level: 'high'}));
+
         // console.log(transformsArray)
 
         //  transformsArray.push(textureCompress({   targetFormat: "webp"}))
@@ -1117,7 +1178,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         await doc.transform(
             //   dedup(),
 
-            ...transformsArray,
+            ...transformsArray
 
             //   backfaceCulling({ cull: false })
 
@@ -1135,7 +1196,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             //   meshopt({encoder: MeshoptEncoder, level: 'medium'})
 
             //   simplify({ simplifier: MeshoptSimplifier, ratio: 0.75, error: 0.001 }),
-          //   instance({ min: 2 }),
+            //   instance({ min: 2 }),
             //  textureCompress({
             //   targetFormat: "webp",
             //, resize: [1024, 1024]
@@ -1333,7 +1394,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                     //    console.log(results.uri);
 
                     if (results.uri.includes(".gltf")) {
- 
                     }
 
                     if (results.issues.numErrors > 0 && !this.props.globalState.textureValue.includes("ktx2")) {

@@ -52,6 +52,10 @@ export class GlobalState {
 
     public reorderState: boolean = false;
 
+    public meshoptState: boolean = false;
+
+    public meshoptLevel = "high";
+
     public qualityLevel: number = 155;
 
     public compressionLevel: number = 2;
