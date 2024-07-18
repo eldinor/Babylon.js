@@ -21,7 +21,7 @@ import { Texture } from "core/Materials/Textures/texture";
 import { PBRMaterial } from "core/Materials/PBR/pbrMaterial";
 //
 import { WebIO, Logger, ImageUtils } from "@gltf-transform/core";
-import { ALL_EXTENSIONS, KHRTextureBasisu } from "@gltf-transform/extensions";
+import { ALL_EXTENSIONS, EXTMeshGPUInstancing, KHRTextureBasisu } from "@gltf-transform/extensions";
 
 import { MeshoptEncoder, MeshoptSimplifier, MeshoptDecoder } from "meshoptimizer";
 
@@ -346,6 +346,11 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         }
         //
         //
+        const getGPUInstState = localStorage.getItem("GPUInstanceState");
+
+        if (getGPUInstState) {
+            this.props.globalState.GPUInstanceState = parseBool(getGPUInstState);
+        }
         //
         // Resize
         window.addEventListener("resize", () => {
@@ -623,7 +628,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         if (getWireframe) {
             this.props.globalState.wireframe = parseBool(getWireframe);
-            console.log(this.props.globalState.wireframe);
             this._scene.forceWireframe = this.props.globalState.wireframe;
             this.props.globalState.skybox = !this._scene.forceWireframe;
         }
@@ -703,7 +707,12 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         doc.setLogger(new Logger(Logger.Verbosity.DEBUG));
 
+        // Adding Generator
+        doc.getRoot().getAsset().generator = "GLB Optimizer (https://glb.babylonpress.org/)";
+        // console.log(doc.getRoot().getAsset());
+
         //   console.log(inspect(doc));
+
         let totalVRAM = 0;
         let hasKTX = false;
 
@@ -867,11 +876,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             localStorage.setItem("weldToleranceNormal", ev.value.toString());
         });
 
-        //
 
-        //
-
-        //
 
         //
         const f1 = pane.addFolder({
@@ -985,7 +990,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         //
         //
         const fKTX = pane.addFolder({
-            title: "KTX2 Compression",
+            title: "KTX2 Compression | KHRTextureBasisu Extension",
         });
 
         const qualityLevelPane = fKTX.addBinding({ qualityLevel: this.props.globalState.qualityLevel }, "qualityLevel", {
@@ -1024,6 +1029,22 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             localStorage.setItem("needSupercompression", ev.value.toString());
         });
         //
+
+                //
+                const fGPUInst = pane.addFolder({
+                    title: "GPU Instancing - EXT_mesh_gpu_instancing",
+                });
+                //
+                const GPUInstPane = fGPUInst.addBinding({ GPUInst: this.props.globalState.GPUInstanceState }, "GPUInst", {
+                    label: "GPU Instancing",
+                });
+        
+                GPUInstPane.on("change", (ev) => {
+                    console.log("GPUInstPane ", ev.value);
+                    this.props.globalState.GPUInstanceState = ev.value;
+                    localStorage.setItem("GPUInstanceState", ev.value.toString());
+                });
+                //
         const f2 = pane.addFolder({
             title: "Other",
         });
@@ -1043,6 +1064,14 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         if (this.props.globalState.dedupState) {
             transformsArray.push(dedup());
+        }
+
+      //  console.log("isGPUinstanced", this.isGPUinstanced);
+        if (!this.isGPUinstanced) {
+            if (this.props.globalState.GPUInstanceState) {
+            transformsArray.push(instance({min:2}));
+            doc.createExtension(EXTMeshGPUInstancing).setRequired(true);
+            }
         }
 
         if (this.props.globalState.pruneState) {
@@ -1092,8 +1121,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         }
         //
         if (this.props.globalState.sparseState) {
-            transformsArray.push(sparse({ratio:this.props.globalState.sparseRatio}));
-            console.log("SPARSED!!!");
+            transformsArray.push(sparse({ ratio: this.props.globalState.sparseRatio }));
         }
 
         //
@@ -1137,7 +1165,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 myFunc = textureCompress(myOptions as any);
                 await doc.transform(myFunc);
             }
-            //   console.log(this.props.globalState.resizeValue);
             //
             // START KTX
 
@@ -1249,11 +1276,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         if (myFunc) {
             transformsArray.push(myFunc);
         }
-        console.log("isGPUinstanced", this.isGPUinstanced);
-        if (!this.isGPUinstanced) {
-            transformsArray.push(instance());
-            //  doc.createExtension(EXTMeshGPUInstancing).setRequired(true);
-        }
+
         //!!!!!!!!!!!!!!!!!!!!!!!!!!! ####################################################!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         //  transformsArray.push( meshopt({encoder: MeshoptEncoder, level: 'high'}));
 

@@ -33,6 +33,7 @@ export class GlobalState {
     public textureValue: string;
 
     public dedupState: boolean = true;
+    public GPUInstanceState: boolean = false;
 
     public pruneState: boolean = true;
 
