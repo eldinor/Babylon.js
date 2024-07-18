@@ -24,6 +24,7 @@ export class Sandbox extends React.Component<ISandboxProps, { isFooterVisible: b
     private _cameraPosition?: Vector3;
     private _logoRef: React.RefObject<HTMLImageElement>;
     private _dropTextRef: React.RefObject<HTMLDivElement>;
+    private reloadInfo: React.RefObject<HTMLDivElement>;
     private _clickInterceptorRef: React.RefObject<HTMLDivElement>;
     private _clearColor?: string;
     private _camera?: number;
@@ -33,6 +34,7 @@ export class Sandbox extends React.Component<ISandboxProps, { isFooterVisible: b
         this._globalState = new GlobalState();
         this._logoRef = React.createRef();
         this._dropTextRef = React.createRef();
+        this.reloadInfo = React.createRef();
         this._clickInterceptorRef = React.createRef();
 
         this.state = { isFooterVisible: true, errorMessage: "" };
@@ -57,6 +59,7 @@ export class Sandbox extends React.Component<ISandboxProps, { isFooterVisible: b
             } else {
                 this._logoRef.current!.className = "hidden";
                 this._dropTextRef.current!.className = "hidden";
+                this.reloadInfo.current!.className = "hidden";
             }
 
             if (this._clearColor) {
@@ -292,12 +295,14 @@ export class Sandbox extends React.Component<ISandboxProps, { isFooterVisible: b
                 <div id="settings-container">
                     <div id="settings"></div>
                 </div>
-
+<p id="reloadinfo" ref={this.reloadInfo}>
+INSTANT RELOAD - press 'R' for fast reload of the uploaded file with new optimization settings applied
+</p>
                 <span>
                     <p id="droptext" ref={this._dropTextRef}>
                         {this._globalState.reflector
                             ? ""
-                            : "Drag and drop uncompressed GLTF / GLB or OBJ files to convert and export them as GLB with WEBP textures (.babylon files should be converted to GLB format)"}
+                            : "Drag and drop GLTF / GLB or OBJ files to convert and export them as GLB with WEBP or KTX2 textures (.babylon files should be converted to GLB format)"}
                     </p>
                     {this._globalState.reflector ? (
                         <ReflectorZone globalState={this._globalState} expanded={!this.state.isFooterVisible} />

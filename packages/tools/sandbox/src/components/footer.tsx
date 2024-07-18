@@ -173,7 +173,7 @@ wireframeMode(){
      this.props.globalState.currentScene.forceWireframe = !this.props.globalState.currentScene.forceWireframe
      this.props.globalState.wireframe = this.props.globalState.currentScene.forceWireframe;
      localStorage.setItem("wireframe", this.props.globalState.wireframe.toString());
-     console.log("wf_Mode", this.props.globalState.wireframe.toString())
+    // console.log("wf_Mode", this.props.globalState.wireframe.toString())
     if(this.props.globalState.currentScene.forceWireframe ){
         this.props.globalState.skybox = false;
     }

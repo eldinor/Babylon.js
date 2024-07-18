@@ -14,9 +14,7 @@ import { Tools } from "core/Misc/tools";
 import { FilesInput } from "core/Misc/filesInput";
 import { Animation } from "core/Animations/animation";
 import { CreatePlane } from "core/Meshes/Builders/planeBuilder";
-
 import "core/Helpers/sceneHelpers";
-
 import "../scss/renderingZone.scss";
 import { PBRBaseMaterial } from "core/Materials/PBR/pbrBaseMaterial";
 import { Texture } from "core/Materials/Textures/texture";
@@ -24,14 +22,13 @@ import { PBRMaterial } from "core/Materials/PBR/pbrMaterial";
 //
 import { WebIO, Logger, ImageUtils } from "@gltf-transform/core";
 import { ALL_EXTENSIONS, KHRTextureBasisu } from "@gltf-transform/extensions";
-//@ts-ignore
+
 import { MeshoptEncoder, MeshoptSimplifier, MeshoptDecoder } from "meshoptimizer";
 
 // import {DracoDecoderModule} from "draco3dgltf";
-//@ts-ignore
-import { inspect, textureCompress, dedup, join, weld, prune, resample, instance, quantize, reorder, simplify, flatten, meshopt, listTextureSlots } from "@gltf-transform/functions";
+
+import { textureCompress, dedup, join, weld, prune, resample, instance, quantize, reorder, simplify, flatten, meshopt, listTextureSlots, sparse } from "@gltf-transform/functions";
 import { Viewport } from "core/Maths/math.viewport";
-// import { compareImages } from "../tools/compareImages";
 
 import { Pane } from "tweakpane";
 
@@ -206,8 +203,27 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         }
 
         //   console.log("No stored resampleState  found", this.props.globalState.resampleState);
+        //
 
         // end resampleState
+
+        const getSparseState = localStorage.getItem("sparseState");
+        //  console.log("getResampleState", getResampleState);
+
+        if (getSparseState) {
+            this.props.globalState.sparseState = parseBool(getSparseState);
+
+            console.log("parsed from Local Storage, sparseState is ", this.props.globalState.sparseState);
+        }
+        //
+        //
+        const getSparseRatio = localStorage.getItem("sparseRatio");
+
+        if (getSparseRatio) {
+            this.props.globalState.sparseRatio = Number(getSparseRatio);
+        }
+
+        //
         //
         const getWeldState = localStorage.getItem("weldState");
         //  console.log("getWeldState", getWeldState);
@@ -253,6 +269,25 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         }
 
         // end SIMPLIFY
+        const getSimplifyRatio = localStorage.getItem("simplifyRatio");
+
+        if (getSimplifyRatio) {
+            this.props.globalState.simplifyRatio = Number(getSimplifyRatio);
+        }
+        //
+        const getSimplifyError = localStorage.getItem("simplifyError");
+        //   console.log("getSimplifyError", getSimplifyError);
+
+        if (getSimplifyError) {
+            this.props.globalState.simplifyError = Number(getSimplifyError);
+        }
+        //
+        const getSimplifyLockborder = localStorage.getItem("simplifyLockborder");
+
+        if (getSimplifyLockborder) {
+            this.props.globalState.simplifyLockborder = parseBool(getSimplifyLockborder);
+        }
+        //
 
         const getReorderState = localStorage.getItem("reorderState");
 
@@ -767,6 +802,34 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             this.props.globalState.resampleState = ev.value;
             localStorage.setItem("resampleState", ev.value.toString());
         });
+        //
+        f0.addBlade({
+            view: "separator",
+        });
+        //
+
+        const sparsePane = f0.addBinding({ Sparse: this.props.globalState.sparseState }, "Sparse", {
+            label: "Sparse",
+        });
+
+        sparsePane.on("change", (ev) => {
+            console.log("sparsePane ", ev.value);
+            this.props.globalState.sparseState = ev.value;
+            localStorage.setItem("sparseState", ev.value.toString());
+        });
+        //
+
+        //
+        const sparseRatioPane = f0.addBinding({ SparseRatio: this.props.globalState.sparseRatio }, "SparseRatio", {
+            label: "Sparse Ratio | Default 1/3",
+            format: (v) => v.toFixed(2),
+        });
+
+        sparseRatioPane.on("change", (ev) => {
+            //    console.log("weldTolerancePane ", ev.value);
+            this.props.globalState.sparseRatio = ev.value;
+            localStorage.setItem("sparseRatio", ev.value.toString());
+        });
 
         //
         f0.addBlade({
@@ -812,7 +875,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         //
         const f1 = pane.addFolder({
-            title: "KHR Extensions - Meshopt",
+            title: "KHR Extensions - Meshoptimizer",
         });
         //
 
@@ -825,6 +888,40 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             this.props.globalState.simplifyState = ev.value;
             localStorage.setItem("simplifyState", ev.value.toString());
         });
+        //
+        const simplifyRatioPane = f1.addBinding({ SimplifyRatio: this.props.globalState.simplifyRatio }, "SimplifyRatio", {
+            label: "Simplify Ratio (0-1) | Default 0",
+            format: (v) => v.toFixed(2),
+        });
+
+        simplifyRatioPane.on("change", (ev) => {
+            console.log("simplifyRatioPane ", ev.value);
+            this.props.globalState.simplifyRatio = ev.value;
+            localStorage.setItem("simplifyRatio", ev.value.toString());
+        });
+        //
+        //
+        const simplifyErrorPane = f1.addBinding({ SimplifyRatio: this.props.globalState.simplifyError }, "SimplifyRatio", {
+            label: "Simplify Error Limit | Default 0.0001 (0.01%)",
+            format: (v) => v.toFixed(4),
+        });
+
+        simplifyErrorPane.on("change", (ev) => {
+            console.log("simplifyErrorPane ", ev.value);
+            this.props.globalState.simplifyError = ev.value;
+            localStorage.setItem("simplifyError", ev.value.toString());
+        });
+        //
+        const simplifyLockborderPane = f1.addBinding({ Lockborder: this.props.globalState.simplifyLockborder }, "Lockborder", {
+            label: "Simplify Lockborder | Default: false ",
+        });
+
+        simplifyLockborderPane.on("change", (ev) => {
+            //    console.log("simplifyLockborderPane ", ev.value);
+            this.props.globalState.simplifyLockborder = ev.value;
+            localStorage.setItem("simplifyLockborder", ev.value.toString());
+        });
+
         //
         f1.addBlade({
             view: "separator",
@@ -917,24 +1014,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             localStorage.setItem("compressionLevel", ev.value.toString());
         });
 
-        /*
-        const compressionLevelPane = fKTX.addBinding({ compressionLevel: this.props.globalState.compressionLevel }, "compressionLevel", {
-            min: 0,
-            max: 5,
-            step: 1,
-            label: "ETC1S Compression Level (0 = fastest)",
-            
-        });
-
-        compressionLevelPane.on("change", (ev) => {
-            this.props.globalState.compressionLevel = ev.value;
-
-            console.log(this.props.globalState.compressionLevel )
-            localStorage.setItem("compressionLevel", ev.value.toString());
-            console.log(localStorage)
-        });
-        //
-        */
         //
         const needSupercompressionPane = fKTX.addBinding({ needSupercompression: this.props.globalState.needSupercompression }, "needSupercompression", {
             label: "Use UASTC Zstandard Supercompression",
@@ -986,7 +1065,14 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         }
 
         if (this.props.globalState.simplifyState) {
-            transformsArray.push(simplify({ simplifier: MeshoptSimplifier, ratio: 0.75, error: 0.001 }));
+            transformsArray.push(
+                simplify({
+                    simplifier: MeshoptSimplifier,
+                    ratio: this.props.globalState.simplifyRatio,
+                    error: this.props.globalState.simplifyError,
+                    lockBorder: this.props.globalState.simplifyLockborder,
+                })
+            );
         }
 
         if (this.props.globalState.reorderState) {
@@ -996,7 +1082,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             transformsArray.push(quantize());
         }
         if (this.props.globalState.meshoptState) {
-            if (this.props.globalState.meshoptLevel === "high") {
+            if (this.props.globalState.meshoptLevel == "high") {
                 transformsArray.push(meshopt({ encoder: MeshoptEncoder, level: "high" }));
                 console.log("HIGH");
             } else {
@@ -1005,6 +1091,11 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             }
         }
         //
+        if (this.props.globalState.sparseState) {
+            transformsArray.push(sparse({ratio:this.props.globalState.sparseRatio}));
+            console.log("SPARSED!!!");
+        }
+
         //
 
         let myFunc;

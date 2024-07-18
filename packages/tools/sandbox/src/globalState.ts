@@ -46,7 +46,13 @@ export class GlobalState {
     public weldTolerance: number = 0.001;
     public weldToleranceNormal: number = 0.25;
 
+    public sparseState: boolean = true;
+    public sparseRatio: number = 0.333333;
+
     public simplifyState: boolean = false;
+    public simplifyRatio: number = 0;
+    public simplifyError: number = 0.0001;
+    public simplifyLockborder: boolean = false;
 
     public quantizeState: boolean = false;
 
