@@ -708,7 +708,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         doc.setLogger(new Logger(Logger.Verbosity.DEBUG));
 
         // Adding Generator
-        doc.getRoot().getAsset().generator = "GLB Optimizer (https://glb.babylonpress.org/)";
+        doc.getRoot().getAsset().generator = "GLB Optimizer (https://glb.babylonpress.org)";
         // console.log(doc.getRoot().getAsset());
 
         //   console.log(inspect(doc));
