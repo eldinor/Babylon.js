@@ -67,7 +67,7 @@ export class GlobalState {
 
     public compressionLevel: number = 2;
 
-    public needSupercompression: boolean = true;
+    public needSupercompression: boolean = false;
 
     public showDebugLayer() {
         this.isDebugLayerEnabled = true;

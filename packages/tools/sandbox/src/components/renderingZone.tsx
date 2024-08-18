@@ -20,14 +20,30 @@ import { PBRBaseMaterial } from "core/Materials/PBR/pbrBaseMaterial";
 import { Texture } from "core/Materials/Textures/texture";
 import { PBRMaterial } from "core/Materials/PBR/pbrMaterial";
 //
-import { WebIO, Logger, ImageUtils } from "@gltf-transform/core";
+import { Document, WebIO, Logger, ImageUtils } from "@gltf-transform/core";
 import { ALL_EXTENSIONS, EXTMeshGPUInstancing, KHRTextureBasisu } from "@gltf-transform/extensions";
 
 import { MeshoptEncoder, MeshoptSimplifier, MeshoptDecoder } from "meshoptimizer";
 
 // import {DracoDecoderModule} from "draco3dgltf";
 
-import { textureCompress, dedup, join, weld, prune, resample, instance, quantize, reorder, simplify, flatten, meshopt, listTextureSlots, sparse } from "@gltf-transform/functions";
+import {
+    textureCompress,
+    dedup,
+    join,
+    weld,
+    prune,
+    resample,
+    instance,
+    quantize,
+    reorder,
+    simplify,
+    flatten,
+    meshopt,
+    listTextureSlots,
+    sparse,
+    TextureCompressOptions,
+} from "@gltf-transform/functions";
 import { Viewport } from "core/Maths/math.viewport";
 
 import { Pane } from "tweakpane";
@@ -35,14 +51,7 @@ import { Pane } from "tweakpane";
 import * as ktx from "ktx2-encoder";
 import { ktxfix } from "../tools/ktxfix";
 import { GLTF2Export } from "serializers/glTF/2.0";
-/*
-import {
-    KHR_DF_PRIMARIES_BT709,
-    KHR_DF_PRIMARIES_UNSPECIFIED,
-    read,
-    write,
-  } from "ktx-parse";
-*/
+
 function isTextureAsset(name: string): boolean {
     const queryStringIndex = name.indexOf("?");
     if (queryStringIndex !== -1) {
@@ -112,246 +121,11 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         }
 
         this._engine.loadingUIBackgroundColor = "#2A2342";
-        //     console.log(this.reImport)
-
-        //
-        //
 
         //  Prepare optimization props
 
-        //
+        this.checkStorage();
 
-        //  console.log("compressionLevel ", this.props.globalState.compressionLevel)
-        //
-        //
-
-        const getResizeValue = localStorage.getItem("resizeValue");
-
-        if (getResizeValue) {
-            this.props.globalState.resizeValue = getResizeValue;
-        } else {
-            this.props.globalState.resizeValue = "No Resize";
-        }
-
-        //    console.log("getResizeValue", getResizeValue);
-        //
-        const getTextureValue = localStorage.getItem("textureValue");
-
-        if (getTextureValue) {
-            this.props.globalState.textureValue = getTextureValue;
-        } else {
-            this.props.globalState.textureValue = "webp";
-        }
-
-        //
-        const getDedupState = localStorage.getItem("dedupState");
-        //    console.log(getDedupState);
-
-        if (getDedupState) {
-            this.props.globalState.dedupState = parseBool(getDedupState);
-
-            //      console.log("parsed from Local Storage, dedupState is", this.props.globalState.dedupState);
-        }
-
-        //   console.log("Default dedup should be true", this.props.globalState.dedupState);
-
-        //
-
-        const getPruneState = localStorage.getItem("pruneState");
-        //  console.log("getPruneState", getPruneState);
-
-        if (getPruneState) {
-            this.props.globalState.pruneState = parseBool(getPruneState);
-
-            //  console.log("parsed from Local Storage, pruneState is", this.props.globalState.pruneState);
-        }
-
-        //  console.log("No stored PRUNE value found", this.props.globalState.pruneState);
-
-        // end prune
-
-        const getFlattenState = localStorage.getItem("flattenState");
-        // console.log("getFlattenState", getFlattenState);
-
-        if (getFlattenState) {
-            this.props.globalState.flattenState = parseBool(getFlattenState);
-
-            //  console.log("parsed from Local Storage, flattenState is", this.props.globalState.flattenState);
-        }
-
-        //  console.log("No stored FLATTEN value found", this.props.globalState.flattenState);
-        //
-        //
-        const getJoinState = localStorage.getItem("joinState");
-        //   console.log("getJoinState", getJoinState);
-
-        if (getJoinState) {
-            this.props.globalState.joinState = parseBool(getJoinState);
-
-            //   console.log("parsed from Local Storage, joinState is", this.props.globalState.joinState);
-        }
-
-        //  console.log("No stored JOIN value found", this.props.globalState.joinState);
-        //
-        const getResampleState = localStorage.getItem("resampleState");
-        //  console.log("getResampleState", getResampleState);
-
-        if (getResampleState) {
-            this.props.globalState.resampleState = parseBool(getResampleState);
-
-            //   console.log("parsed from Local Storage, resampleState is", this.props.globalState.resampleState);
-        }
-
-        //   console.log("No stored resampleState  found", this.props.globalState.resampleState);
-        //
-
-        // end resampleState
-
-        const getSparseState = localStorage.getItem("sparseState");
-        //  console.log("getResampleState", getResampleState);
-
-        if (getSparseState) {
-            this.props.globalState.sparseState = parseBool(getSparseState);
-
-            console.log("parsed from Local Storage, sparseState is ", this.props.globalState.sparseState);
-        }
-        //
-        //
-        const getSparseRatio = localStorage.getItem("sparseRatio");
-
-        if (getSparseRatio) {
-            this.props.globalState.sparseRatio = Number(getSparseRatio);
-        }
-
-        //
-        //
-        const getWeldState = localStorage.getItem("weldState");
-        //  console.log("getWeldState", getWeldState);
-
-        if (getWeldState) {
-            this.props.globalState.weldState = parseBool(getWeldState);
-
-            //     console.log("parsed from Local Storage, flattenState is", this.props.globalState.weldState);
-        }
-
-        //   console.log("No stored WELD State value found", this.props.globalState.weldState);
-
-        //
-        const getWeldTolerance = localStorage.getItem("weldTolerance");
-        //   console.log("getWeldTolerance", getWeldTolerance);
-
-        if (getWeldTolerance) {
-            this.props.globalState.weldTolerance = Number(getWeldTolerance);
-
-            //      console.log("parsed from Local Storage, weldTolerance is", this.props.globalState.weldTolerance);
-        }
-
-        //  console.log("No stored getWeldTolerance value found", this.props.globalState.weldTolerance);
-        //
-
-        const getWeldToleranceNormal = localStorage.getItem("weldToleranceNormal");
-        //  console.log("getWeldToleranceNormal", getWeldToleranceNormal);
-
-        if (getWeldToleranceNormal) {
-            this.props.globalState.weldToleranceNormal = Number(getWeldToleranceNormal);
-
-            //     console.log("parsed from Local Storage, weldTolerance is", this.props.globalState.weldToleranceNormal);
-        } else {
-            //     console.log("No stored getWeldTolerance value found", this.props.globalState.weldToleranceNormal);
-        }
-
-        //
-        const getSimplifyState = localStorage.getItem("simplifyState");
-        //   console.log("getSimplifyState", getSimplifyState);
-
-        if (getSimplifyState) {
-            this.props.globalState.simplifyState = parseBool(getSimplifyState);
-        }
-
-        // end SIMPLIFY
-        const getSimplifyRatio = localStorage.getItem("simplifyRatio");
-
-        if (getSimplifyRatio) {
-            this.props.globalState.simplifyRatio = Number(getSimplifyRatio);
-        }
-        //
-        const getSimplifyError = localStorage.getItem("simplifyError");
-        //   console.log("getSimplifyError", getSimplifyError);
-
-        if (getSimplifyError) {
-            this.props.globalState.simplifyError = Number(getSimplifyError);
-        }
-        //
-        const getSimplifyLockborder = localStorage.getItem("simplifyLockborder");
-
-        if (getSimplifyLockborder) {
-            this.props.globalState.simplifyLockborder = parseBool(getSimplifyLockborder);
-        }
-        //
-
-        const getReorderState = localStorage.getItem("reorderState");
-
-        if (getReorderState) {
-            this.props.globalState.reorderState = parseBool(getReorderState);
-        }
-
-        // end reorderState
-
-        const getQuantizeState = localStorage.getItem("quantizeState");
-
-        if (getQuantizeState) {
-            this.props.globalState.quantizeState = parseBool(getQuantizeState);
-        }
-
-        // end Quantize
-
-        const getMeshoptState = localStorage.getItem("meshoptState");
-
-        if (getMeshoptState) {
-            this.props.globalState.meshoptState = parseBool(getMeshoptState);
-        }
-
-        // end meshoptState
-
-        const getMeshoptLevel = localStorage.getItem("meshoptLevel");
-
-        if (getMeshoptLevel) {
-            this.props.globalState.meshoptLevel = getMeshoptLevel;
-        }
-
-        // end meshoptLevel
-        //
-
-        const getQualityLevel = localStorage.getItem("qualityLevel");
-
-        if (getQualityLevel) {
-            this.props.globalState.qualityLevel = Number(getQualityLevel);
-        }
-
-        //
-
-        let getCompressionLevel = localStorage.getItem("compressionLevel");
-
-        if (getCompressionLevel) {
-            this.props.globalState.compressionLevel = Number(getCompressionLevel);
-        } else {
-            this.props.globalState.compressionLevel = 2;
-        }
-        //
-        //
-        const getNeedSupercompression = localStorage.getItem("needSupercompression");
-
-        if (getNeedSupercompression) {
-            this.props.globalState.needSupercompression = parseBool(getNeedSupercompression);
-        }
-        //
-        //
-        const getGPUInstState = localStorage.getItem("GPUInstanceState");
-
-        if (getGPUInstState) {
-            this.props.globalState.GPUInstanceState = parseBool(getGPUInstState);
-        }
-        //
         // Resize
         window.addEventListener("resize", () => {
             this._engine.resize();
@@ -424,10 +198,9 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             //
             this._originBlob = new Blob(filesToLoad);
 
-            //     console.log(filesToLoad)
-
             this.props.globalState.origFilename = (filesToLoad[0] as any).correctName;
 
+            // Use reimport for folders
             for (let i = 0; i < filesToLoad.length; i++) {
                 if ((filesToLoad[i] as any).correctName.includes(".gltf")) {
                     this.props.globalState.origFilename = (filesToLoad[i] as any).correctName;
@@ -438,9 +211,10 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                     this.reImport = true;
                 }
             }
-
+            // OBJ format detected
             if (this.props.globalState.origFilename.includes(".obj")) {
                 console.log("OBJ DETECTED");
+                // TODO: Convert info elements to function
                 document.getElementById("topInfo2")!.style.display = "block";
                 document.getElementById("topInfo2")!.innerHTML += "For OBJ files the pixel comparison function has no sense due to the different character of materials.<br/> ";
                 setTimeout(() => {
@@ -448,17 +222,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                     document.getElementById("topInfo2")!.innerHTML = "";
                 }, 4000);
             }
-
-            /*
-           let extension = this._originFilename.split('.').pop();
-           console.log(extension)
-
-
-           console.log(this._originFilename.replace(/\.[^/.]+$/, ""))
-           console.log(this._originFilename)
-           */
-            //
-            //
 
             return SceneLoader.LoadAsync("file:", sceneFile, this._engine, onProgress);
         };
@@ -526,8 +289,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
             camera.viewport = new Viewport(0, 0, 0.5, 1.0);
 
-            const camera2 = camera.clone("camera2");
-            //            const camera2 = new ArcRotateCamera('camera2',1,1,5,Vector3.Zero() )
+            const camera2 = camera.clone("camera2") as ArcRotateCamera;
 
             this._scene.activeCameras!.push(camera);
             this._scene.activeCameras!.push(camera2);
@@ -538,10 +300,10 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             camera2.layerMask = 0x20000000;
 
             this._scene.onBeforeCameraRenderObservable.add(function () {
-                (camera2 as any).alpha = (camera as any).alpha;
-                (camera2 as any).beta = (camera as any).beta;
-                (camera2 as any).radius = (camera as any).radius;
-                (camera2 as any).target = (camera as any).target;
+                camera2.alpha = camera.alpha;
+                camera2.beta = camera.beta;
+                camera2.radius = camera.radius;
+                camera2.target = camera.target;
             });
         }
 
@@ -624,6 +386,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         this.prepareLighting();
         this.handleErrors();
 
+        // Toggle Wireframe
         const getWireframe = localStorage.getItem("wireframe");
 
         if (getWireframe) {
@@ -631,19 +394,14 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             this._scene.forceWireframe = this.props.globalState.wireframe;
             this.props.globalState.skybox = !this._scene.forceWireframe;
         }
-
+        // TODO: Convert to function
         this._scene.onPointerObservable.add(function (ev) {
-            //  console.log(ev);
-            //    document.getElementById("ktx-container")!.style.display = "none";
-
             if (ev.type == 1) {
-                //   console.log("CLICK");
                 if (document.getElementById("settings-container")) {
                     if (document.getElementById("settings-container")!.style.display !== "none") {
                         document.getElementById("settings-container")!.style.display = "none";
                     }
                 }
-
                 if (document.getElementById("help-container")) {
                     if (document.getElementById("help-container")!.style.display !== "none") {
                         document.getElementById("help-container")!.style.display = "none";
@@ -651,7 +409,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 }
             } //
         });
-
+        // Creating new Skybox with new layer mask
         if (this._scene.getMeshByName("hdrSkyBox")) {
             const hdrSkyBox2 = (this._scene.getMeshByName("hdrSkyBox") as any).createInstance("hdrSkyBox2");
             hdrSkyBox2.layerMask = 0x20000000;
@@ -662,14 +420,12 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         }
 
         delete this._currentPluginName;
-        //
-        //
-        //     console.log(this.reImport);
 
         // Add here processing for Draco, ktx extensions and OBJ, BABYLON files
 
+        //
         let camera1 = this._scene.getCameraByName("default camera");
-        let camera2 = this._scene.getCameraByName("default camera");
+        let camera2 = this._scene.getCameraByName("camera2");
 
         let hdrSkyBox = this._scene.getMeshByName("hdrSkyBox");
         let hdrSkyBox2 = this._scene.getMeshByName("hdrSkyBox2");
@@ -679,21 +435,19 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 return node !== camera1 && node !== camera2 && node !== hdrSkyBox && node !== hdrSkyBox2;
             },
         };
-        //    console.log(options);
         //
-
+        // For files which cannot be loaded into GLTF-Transform directly
         if (this.reImport) {
             const exportScene = await GLTF2Export.GLBAsync(this._scene, "fileName", options);
             const blob = exportScene.glTFFiles["fileName" + ".glb"];
-
-            //        console.log(blob);
-
             this._originBlob = blob as Blob;
         }
 
         //
-        //  The beginning
+        //  The beginning of everything :)
         const arr = new Uint8Array(await this._originBlob.arrayBuffer());
+
+        // TODO: make better :)
         document.getElementById("topLeft")!.innerHTML = this.props.globalState.origFilename;
         document.getElementById("topLeft")!.innerHTML += " | ";
         document.getElementById("topLeft")!.innerHTML += "<strong>" + (arr.length / (1024 * 1024)).toFixed(2).toString() + " Mb</strong>";
@@ -703,32 +457,29 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             "meshopt.encoder": MeshoptEncoder,
         });
 
+        // Creating GLTF-Transform Document
         const doc = await io.readBinary(arr);
 
         doc.setLogger(new Logger(Logger.Verbosity.DEBUG));
 
-        // Adding Generator
+        // Adding Generator to show in asset metadata
         doc.getRoot().getAsset().generator = "GLB Optimizer (https://glb.babylonpress.org)";
-        // console.log(doc.getRoot().getAsset());
-
-        //   console.log(inspect(doc));
 
         let totalVRAM = 0;
         let hasKTX = false;
 
+        // Calculate VRAM and check KTX textures
         doc.getRoot()
             .listTextures()
             .forEach((tex) => {
                 const vram = ImageUtils.getVRAMByteLength(tex.getImage()!, tex.getMimeType());
-
-                //  console.log("VRAM: " + vram)
                 totalVRAM += vram!;
 
                 if (tex.getMimeType().includes("ktx")) {
                     hasKTX = true;
                 }
             });
-
+        // Reset some values for KTX textures
         if (hasKTX) {
             console.log("KTX FOUND!!!");
             this.props.globalState.resizeValue = "No Resize";
@@ -741,10 +492,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             }, 4000);
         }
 
-        //    console.log("TOTAL VRAM " + niceBytes(totalVRAM))
-
         document.getElementById("topLeft")!.innerHTML += " | Texture VRAM " + niceBytes(totalVRAM);
-        //   console.log(doc.getRoot().getAsset());
 
         await MeshoptEncoder.ready;
         //
@@ -766,7 +514,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         dedupPane.on("change", (ev) => {
-            //   console.log(ev.value);
             this.props.globalState.dedupState = ev.value;
             localStorage.setItem("dedupState", ev.value.toString());
         });
@@ -776,7 +523,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         prunePane.on("change", (ev) => {
-            //   console.log("prunePane ", ev.value);
             this.props.globalState.pruneState = ev.value;
             localStorage.setItem("pruneState", ev.value.toString());
         });
@@ -786,7 +532,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         flattenPane.on("change", (ev) => {
-            //   console.log("flattenPane ", ev.value);
             this.props.globalState.flattenState = ev.value;
             localStorage.setItem("flattenState", ev.value.toString());
         });
@@ -796,7 +541,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         joinPane.on("change", (ev) => {
-            //   console.log("joinPane ", ev.value);
             this.props.globalState.joinState = ev.value;
             localStorage.setItem("joinState", ev.value.toString());
         });
@@ -807,7 +551,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         resamplePane.on("change", (ev) => {
-            //    console.log("resamplePane ", ev.value);
             this.props.globalState.resampleState = ev.value;
             localStorage.setItem("resampleState", ev.value.toString());
         });
@@ -835,7 +578,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         sparseRatioPane.on("change", (ev) => {
-            //    console.log("weldTolerancePane ", ev.value);
             this.props.globalState.sparseRatio = ev.value;
             localStorage.setItem("sparseRatio", ev.value.toString());
         });
@@ -849,7 +591,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         weldPane.on("change", (ev) => {
-            //    console.log("weldPane ", ev.value);
             this.props.globalState.weldState = ev.value;
             localStorage.setItem("weldState", ev.value.toString());
         });
@@ -860,7 +601,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         weldTolerancePane.on("change", (ev) => {
-            //    console.log("weldTolerancePane ", ev.value);
             this.props.globalState.weldTolerance = ev.value;
             localStorage.setItem("weldTolerance", ev.value.toString());
         });
@@ -871,12 +611,9 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         weldToleranceNormalPane.on("change", (ev) => {
-            //    console.log("weldToleranceNormalPane ", ev.value);
             this.props.globalState.weldToleranceNormal = ev.value;
             localStorage.setItem("weldToleranceNormal", ev.value.toString());
         });
-
-
 
         //
         const f1 = pane.addFolder({
@@ -889,7 +626,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         simplifyPane.on("change", (ev) => {
-            //    console.log("simplifyPane ", ev.value);
             this.props.globalState.simplifyState = ev.value;
             localStorage.setItem("simplifyState", ev.value.toString());
         });
@@ -922,7 +658,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         simplifyLockborderPane.on("change", (ev) => {
-            //    console.log("simplifyLockborderPane ", ev.value);
             this.props.globalState.simplifyLockborder = ev.value;
             localStorage.setItem("simplifyLockborder", ev.value.toString());
         });
@@ -937,19 +672,15 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         reorderPane.on("change", (ev) => {
-            //   console.log("reorderPane ", ev.value);
             this.props.globalState.reorderState = ev.value;
             localStorage.setItem("reorderState", ev.value.toString());
         });
-
-        // this.props.globalState.textureValue == "ktx2/MIX"
 
         const quantizePane = f1.addBinding({ Quantize: this.props.globalState.quantizeState }, "Quantize", {
             label: "Quantize | KHR_mesh_quantization",
         });
 
         quantizePane.on("change", (ev) => {
-            //   console.log("quantizePane ", ev.value);
             this.props.globalState.quantizeState = ev.value;
             localStorage.setItem("quantizeState", ev.value.toString());
         });
@@ -987,7 +718,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             this.props.globalState.meshoptLevel = ev.value;
             localStorage.setItem("meshoptLevel", ev.value.toString());
         });
-        //
+
         //
         const fKTX = pane.addFolder({
             title: "KTX2 Compression | KHRTextureBasisu Extension",
@@ -1005,7 +736,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             localStorage.setItem("qualityLevel", ev.value.toString());
         });
 
-        //
         //
         const cpLevelPane = fKTX.addBinding({ compressionLevel: this.props.globalState.compressionLevel }, "compressionLevel", {
             min: 0,
@@ -1030,21 +760,22 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
         //
 
-                //
-                const fGPUInst = pane.addFolder({
-                    title: "GPU Instancing - EXT_mesh_gpu_instancing",
-                });
-                //
-                const GPUInstPane = fGPUInst.addBinding({ GPUInst: this.props.globalState.GPUInstanceState }, "GPUInst", {
-                    label: "GPU Instancing",
-                });
-        
-                GPUInstPane.on("change", (ev) => {
-                    console.log("GPUInstPane ", ev.value);
-                    this.props.globalState.GPUInstanceState = ev.value;
-                    localStorage.setItem("GPUInstanceState", ev.value.toString());
-                });
-                //
+        //
+        const fGPUInst = pane.addFolder({
+            title: "GPU Instancing - EXT_mesh_gpu_instancing",
+        });
+        //
+        const GPUInstPane = fGPUInst.addBinding({ GPUInst: this.props.globalState.GPUInstanceState }, "GPUInst", {
+            label: "GPU Instancing",
+        });
+
+        GPUInstPane.on("change", (ev) => {
+            console.log("GPUInstPane ", ev.value);
+            this.props.globalState.GPUInstanceState = ev.value;
+            localStorage.setItem("GPUInstanceState", ev.value.toString());
+        });
+
+        // OTHER SETTINGS
         const f2 = pane.addFolder({
             title: "Other",
         });
@@ -1057,20 +788,19 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             localStorage.clear();
             location.reload();
         });
+        // END Settings Panes
 
-        //
-
+        // Starting to push transform functions to transformsArray
         const transformsArray = [];
 
         if (this.props.globalState.dedupState) {
             transformsArray.push(dedup());
         }
-
-      //  console.log("isGPUinstanced", this.isGPUinstanced);
+        // Check GPU instancing in order to apply only once if true
         if (!this.isGPUinstanced) {
             if (this.props.globalState.GPUInstanceState) {
-            transformsArray.push(instance({min:2}));
-            doc.createExtension(EXTMeshGPUInstancing).setRequired(true);
+                transformsArray.push(instance({ min: 2 }));
+                doc.createExtension(EXTMeshGPUInstancing).setRequired(true);
             }
         }
 
@@ -1113,19 +843,17 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         if (this.props.globalState.meshoptState) {
             if (this.props.globalState.meshoptLevel == "high") {
                 transformsArray.push(meshopt({ encoder: MeshoptEncoder, level: "high" }));
-                console.log("HIGH");
             } else {
                 transformsArray.push(meshopt({ encoder: MeshoptEncoder, level: "medium" }));
-                console.log("MEDIUM");
             }
         }
         //
         if (this.props.globalState.sparseState) {
             transformsArray.push(sparse({ ratio: this.props.globalState.sparseRatio }));
         }
-
         //
 
+        // Preparing KTX Conversion
         let myFunc;
         let myOptions;
 
@@ -1141,7 +869,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         if (this.props.globalState.textureValue == "ktx2/UASTC" || this.props.globalState.textureValue == "ktx2/ETC1S" || this.props.globalState.textureValue == "ktx2/MIX") {
             //   console.log("KTX2");
 
-            //   console.log(this.props.globalState);
+            //   TODO: convert to function
             document.getElementById("ktx-container")!.style.display = "initial";
             document.getElementById("ktx")!.innerHTML = "Starting KTX2 Conversion...";
             //
@@ -1169,11 +897,9 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             // START KTX
 
             console.log("Starting KTX2 Conversion");
-            //    console.log("compressionLevel ", this.props.globalState.compressionLevel)
 
             let totalTime = 0;
             let timer = 0;
-            //   let texIndex = 0;
 
             for (const tex of doc.getRoot().listTextures()) {
                 timer = Date.now();
@@ -1203,33 +929,29 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                     }
                 }
                 //
-                //
 
                 if (img) {
                     let imgKTX = await ktx.encodeToKTX2(img.buffer, {
                         type: texType,
-                        enableDebug: false,
-                        generateMipmap: true,
+                        enableDebug: false, // TODO: make checkbox
+                        generateMipmap: true, // TODO: make checkbox
                         isUASTC: texMode,
                         qualityLevel: this.props.globalState.qualityLevel, // 1-255
                         compressionLevel: this.props.globalState.compressionLevel, // 0-5
-                        //  isSetKTX2SRGBTransferFunc: false,
-                        //  needSupercompression:false,
+                        //  isSetKTX2SRGBTransferFunc: true, // by default
+                        needSupercompression: this.props.globalState.needSupercompression, // default false
                     });
-
+                    // Assign KTX image to the texture
                     tex.setMimeType("image/ktx2").setImage(imgKTX);
                 }
 
-                // KTX2 Texture done
+                // KTX2 Texture converted
                 console.log(tex.getName());
                 console.log(tex.getSize()![0] + " * " + tex.getSize()![1]);
 
-                //    document.getElementById("ktx")!.innerHTML = "Texture " + texIndex + tex.getName();
-                //   document.getElementById("ktx")!.innerHTML += tex.getSize()![0] + " * " + tex.getSize()![1];
-
                 console.log(((Date.now() - timer) * 0.001).toFixed(2) + " seconds");
                 totalTime += Number(((Date.now() - timer) * 0.001).toFixed(2));
-            }
+            } // All textures converted to KTX
 
             doc.createExtension(KHRTextureBasisu).setRequired(true);
 
@@ -1237,16 +959,13 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
             document.getElementById("ktx")!.innerHTML = "Total Conversion Time " + totalTime.toFixed(2) + " seconds";
 
-            //      document.getElementById("ktx")!.innerHTML += "<br/>Finished KTX2 Conversion, fixing..."
-
             console.log("Finished KTX2 Conversion, fixing...");
-
+            // Apply KTXFix
             timer = Date.now();
             await doc.transform(ktxfix());
 
             console.log("The correction took " + ((Date.now() - timer) * 0.001).toFixed(2) + " seconds");
-            //  console.log(inspect(doc));
-            //    document.getElementById("ktx")!.innerHTML += " " + ((Date.now() - timer) * 0.001).toFixed(2) + " seconds."
+
             document.getElementById("ktx")!.innerHTML += "<br/> Done!";
 
             //
@@ -1257,88 +976,40 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             });
             //
         }
-        //
+        // Start texture resizing and converting to the chosen format
         if (this.props.globalState.textureValue !== "Keep Original" && this.props.globalState.textureValue !== "ktx2") {
-            myOptions = { targetFormat: this.props.globalState.textureValue };
-            myFunc = textureCompress(myOptions as any);
-            //    console.log(myFunc);
+            myOptions = { targetFormat: this.props.globalState.textureValue } as TextureCompressOptions;
+            myFunc = textureCompress(myOptions);
 
             if (this.props.globalState.resizeValue !== "No Resize") {
                 myOptions = { targetFormat: this.props.globalState.textureValue, resize: [Number(this.props.globalState.resizeValue), Number(this.props.globalState.resizeValue)] };
-                myFunc = textureCompress(myOptions as any);
+                myFunc = textureCompress(myOptions as TextureCompressOptions);
             }
         } else {
             if (this.props.globalState.resizeValue !== "No Resize") {
                 myOptions = { resize: [Number(this.props.globalState.resizeValue), Number(this.props.globalState.resizeValue)] };
-                myFunc = textureCompress(myOptions as any);
+                myFunc = textureCompress(myOptions as TextureCompressOptions);
             }
         }
         if (myFunc) {
             transformsArray.push(myFunc);
         }
-
-        //!!!!!!!!!!!!!!!!!!!!!!!!!!! ####################################################!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        //  transformsArray.push( meshopt({encoder: MeshoptEncoder, level: 'high'}));
-
-        // console.log(transformsArray)
-
-        //  transformsArray.push(textureCompress({   targetFormat: "webp"}))
-        //      console.log(transformsArray);
-        //
-        //
-
-        //     console.log("UNDEFINED | NO RESIZE");
-        //     console.log("dedup ", this.props.globalState.dedupState);
-        await doc.transform(
-            //   dedup(),
-
-            ...transformsArray
-
-            //   backfaceCulling({ cull: false })
-
-            //                quantize()
-
-            //   weld({ tolerance: 0.001, toleranceNormal: 0.5 }),
-            //
-            //     prune(),
-            //    resample(),
-            //    join({ keepMeshes: false, keepNamed: false }),
-            //    backfaceCulling({ cull: false }),
-            //    weld({ tolerance: 0.001, toleranceNormal: 0.5 }),
-
-            //     reorder({ encoder: MeshoptEncoder }),
-            //   meshopt({encoder: MeshoptEncoder, level: 'medium'})
-
-            //   simplify({ simplifier: MeshoptSimplifier, ratio: 0.75, error: 0.001 }),
-            //   instance({ min: 2 }),
-            //  textureCompress({
-            //   targetFormat: "webp",
-            //, resize: [1024, 1024]
-            //   })
-        );
+        // Start to transform with all functions from transformsArray
+        await doc.transform(...transformsArray);
 
         totalVRAM = 0;
         doc.getRoot()
             .listTextures()
             .forEach((tex) => {
                 const vram = ImageUtils.getVRAMByteLength(tex.getImage()!, tex.getMimeType());
-
-                //    console.log("OPTIMIZED VRAM: " + vram)
                 totalVRAM += vram!;
             });
 
         //    console.log("TOTAL OPTIMIZED VRAM " + niceBytes(totalVRAM))
 
-        //@ts-ignore
-        function backfaceCulling(options: any) {
-            return (doc: any) => {
-                for (const material of doc.getRoot().listMaterials()) {
-                    //   console.log(material);
-                    //    console.log(options.cull);
-                    material.setDoubleSided(!options.cull);
-                }
-            };
-        }
+        //        await doc.transform(backfaceCulling({cull:false}))
+
+        // Starting to output optimized GLB
         const glb = await io.writeBinary(doc);
 
         const assetBlob = new Blob([glb]);
@@ -1346,10 +1017,9 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         const newGLB = await SceneLoader.ImportMeshAsync("", assetUrl, undefined, this._scene, undefined, ".glb");
 
-        //  console.log(newGLB);
-
         this.props.globalState.optURL = assetUrl;
 
+        // TODO: Convert to something better
         document.getElementById("topRight")!.innerHTML =
             "Optimized: <strong>" +
             (glb.length / (1024 * 1024)).toFixed(2).toString() +
@@ -1360,20 +1030,14 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             "</strong>";
         document.getElementById("topRight")!.innerHTML += " | OPTIMIZED VRAM " + niceBytes(totalVRAM);
 
-        //  console.log(this.props.globalState.optURL)
-
-        const rr = newGLB.meshes[0];
-        //   this._scene.debugLayer.select(rr);
-
-        rr.getChildMeshes().forEach((element) => {
+        newGLB.meshes[0].getChildMeshes().forEach((element) => {
             element.layerMask = 0x20000000;
         });
         //
         console.log("Memory Used: ", niceBytes((window.performance as any).memory.usedJSHeapSize));
-        //
-        //
-    }
+    } //
 
+    //
     loadTextureAsset(url: string): Scene {
         const scene = new Scene(this._engine);
         const plane = CreatePlane("plane", { size: 1 }, scene);
@@ -1421,11 +1085,10 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         this._engine.clearInternalTexturesCache();
 
-        // const promise = isTextureAsset(assetUrl) ? Promise.resolve(this.loadTextureAsset(assetUrl)) : SceneLoader.LoadAsync(rootUrl, fileName, this._engine);
-
+        // TODO: Make loadable from external URL
         const promise = isTextureAsset(assetUrl) ? Promise.resolve(this.loadTextureAsset(assetUrl)) : SceneLoader.LoadAsync(rootUrl, fileName, this._engine);
 
-        console.log(fileName);
+        // console.log(fileName);
 
         promise
             .then((scene) => {
@@ -1434,10 +1097,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 }
 
                 this._scene = scene;
-
-                //  loadFromMemory(rootUrl + fileName, scene, this._originBlob)
-
-                //   this.reImport = true
 
                 this.onSceneLoaded(fileName);
 
@@ -1473,20 +1132,16 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         GLTFFileLoader.IncrementalLoading = false;
         this.props.globalState.glTFLoaderExtensions = {};
 
-        //    let GLTFChecker = false;
-
         SceneLoader.OnPluginActivatedObservable.add((plugin) => {
             this._currentPluginName = plugin.name;
 
             //    console.log(plugin);
-
+            // Check for GLTF and OBJ to reImport
             this.reImport = false;
             if (this.props.globalState.origFilename.includes(".gltf")) {
-                //      console.log("INCLUDES GLTF")
                 this.reImport = true;
             }
 
-            // || this._currentPluginName === "babylon.js"
             if (this._currentPluginName === "obj") {
                 this.reImport = true;
             }
@@ -1502,21 +1157,12 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 loader.onExtensionLoadedObservable.add((extension: import("loaders/glTF/index").IGLTFLoaderExtension) => {
                     this.props.globalState.glTFLoaderExtensions[extension.name] = extension;
                 });
-
+                // TODO: Check the new validator if it gives errors with KTX
                 loader.onValidatedObservable.add((results) => {
-                    //  console.log(results);
-                    //    console.log(results.uri);
-
-                    if (results.uri.includes(".gltf")) {
-                    }
-
                     if (results.issues.numErrors > 0 && !this.props.globalState.textureValue.includes("ktx2")) {
                         this.props.globalState.showDebugLayer();
                         this.errorNum = results.issues.numErrors;
-                        //    console.log(results.issues);
-                        //    console.log(results.info);
-                        //    console.log(results);
-                        //    console.log("errorNum ", this.errorNum);
+                        // TODO: Convert to something better
                         document.getElementById("topInfo")!.style.display = "block";
 
                         document.getElementById("topInfo")!.innerHTML = "Found <strong>" + this.errorNum + "</strong> validation errors." + "<br/>" + "Hope to correct...";
@@ -1526,22 +1172,15 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                         }, 4000);
                     }
                 });
-
+                // Check for GLB/GLTF extensionsRequired
                 loader.onParsedObservable.add((gltfBabylon) => {
-                    //      console.log(loader)
-                    // this.reImport = true;
-                    //     console.log(gltfBabylon.json as any);
-                    //       console.log((gltfBabylon.json as any).extensionsRequired);
                     if ((gltfBabylon.json as any).extensionsRequired) {
                         (gltfBabylon.json as any).extensionsRequired.forEach((element: any) => {
-                            //     console.log(element);
-                            if (element.includes("webp")) {
-                                //         console.log("WEBP");
-                            }
+                            // Check for Draco compression
                             if (element.includes("draco")) {
-                                //       console.log("DRACO");
+                                // console.log("DRACO");
                                 this.reImport = true;
-
+                                // TODO: Convert to something better
                                 document.getElementById("topInfo2")!.style.display = "block";
                                 document.getElementById("topInfo2")!.innerHTML = "DRACO Compression detected. Uncompressing...<br/> ";
                                 setTimeout(() => {
@@ -1551,13 +1190,14 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                             }
                         });
                     }
-                    //
+                    // Check for GLB/GLTF extensionsUsed
                     if ((gltfBabylon.json as any).extensionsUsed) {
                         (gltfBabylon.json as any).extensionsUsed.forEach((element: any) => {
+                            // Check for GPU Instancing
                             if (element.includes("instancing")) {
                                 //       console.log("GPU instancing");
                                 this.isGPUinstanced = true;
-
+                                // TODO: Convert to something better
                                 document.getElementById("topInfo2")!.style.display = "block";
                                 document.getElementById("topInfo2")!.innerHTML = "EXT_mesh_gpu_instancing detected...<br/> ";
                                 setTimeout(() => {
@@ -1568,9 +1208,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                         });
                     }
                 });
-                //
-
-                //
             }
         });
 
@@ -1583,6 +1220,179 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             return true;
         }
         return false;
+    }
+
+    private checkStorage() {
+        const getResizeValue = localStorage.getItem("resizeValue");
+
+        if (getResizeValue) {
+            this.props.globalState.resizeValue = getResizeValue;
+        } else {
+            this.props.globalState.resizeValue = "No Resize";
+        }
+
+        //
+        const getTextureValue = localStorage.getItem("textureValue");
+
+        if (getTextureValue) {
+            this.props.globalState.textureValue = getTextureValue;
+        } else {
+            this.props.globalState.textureValue = "webp";
+        }
+
+        //
+        const getDedupState = localStorage.getItem("dedupState");
+        if (getDedupState) {
+            this.props.globalState.dedupState = parseBool(getDedupState);
+        }
+
+        const getPruneState = localStorage.getItem("pruneState");
+
+        if (getPruneState) {
+            this.props.globalState.pruneState = parseBool(getPruneState);
+        }
+
+        //
+        const getFlattenState = localStorage.getItem("flattenState");
+
+        if (getFlattenState) {
+            this.props.globalState.flattenState = parseBool(getFlattenState);
+        }
+
+        //
+        const getJoinState = localStorage.getItem("joinState");
+
+        if (getJoinState) {
+            this.props.globalState.joinState = parseBool(getJoinState);
+        }
+
+        //
+        const getResampleState = localStorage.getItem("resampleState");
+
+        if (getResampleState) {
+            this.props.globalState.resampleState = parseBool(getResampleState);
+        }
+
+        //
+        const getSparseState = localStorage.getItem("sparseState");
+
+        if (getSparseState) {
+            this.props.globalState.sparseState = parseBool(getSparseState);
+        }
+
+        //
+        const getSparseRatio = localStorage.getItem("sparseRatio");
+
+        if (getSparseRatio) {
+            this.props.globalState.sparseRatio = Number(getSparseRatio);
+        }
+
+        //
+        const getWeldState = localStorage.getItem("weldState");
+
+        if (getWeldState) {
+            this.props.globalState.weldState = parseBool(getWeldState);
+        }
+
+        //
+        const getWeldTolerance = localStorage.getItem("weldTolerance");
+
+        if (getWeldTolerance) {
+            this.props.globalState.weldTolerance = Number(getWeldTolerance);
+        }
+
+        //
+        const getWeldToleranceNormal = localStorage.getItem("weldToleranceNormal");
+
+        if (getWeldToleranceNormal) {
+            this.props.globalState.weldToleranceNormal = Number(getWeldToleranceNormal);
+        }
+
+        //
+        const getSimplifyState = localStorage.getItem("simplifyState");
+
+        if (getSimplifyState) {
+            this.props.globalState.simplifyState = parseBool(getSimplifyState);
+        }
+
+        //
+        const getSimplifyRatio = localStorage.getItem("simplifyRatio");
+
+        if (getSimplifyRatio) {
+            this.props.globalState.simplifyRatio = Number(getSimplifyRatio);
+        }
+
+        //
+        const getSimplifyError = localStorage.getItem("simplifyError");
+
+        if (getSimplifyError) {
+            this.props.globalState.simplifyError = Number(getSimplifyError);
+        }
+
+        //
+        const getSimplifyLockborder = localStorage.getItem("simplifyLockborder");
+
+        if (getSimplifyLockborder) {
+            this.props.globalState.simplifyLockborder = parseBool(getSimplifyLockborder);
+        }
+
+        //
+        const getReorderState = localStorage.getItem("reorderState");
+
+        if (getReorderState) {
+            this.props.globalState.reorderState = parseBool(getReorderState);
+        }
+
+        //
+        const getQuantizeState = localStorage.getItem("quantizeState");
+
+        if (getQuantizeState) {
+            this.props.globalState.quantizeState = parseBool(getQuantizeState);
+        }
+
+        //
+        const getMeshoptState = localStorage.getItem("meshoptState");
+
+        if (getMeshoptState) {
+            this.props.globalState.meshoptState = parseBool(getMeshoptState);
+        }
+
+        //
+        const getMeshoptLevel = localStorage.getItem("meshoptLevel");
+
+        if (getMeshoptLevel) {
+            this.props.globalState.meshoptLevel = getMeshoptLevel;
+        }
+
+        //
+        const getQualityLevel = localStorage.getItem("qualityLevel");
+
+        if (getQualityLevel) {
+            this.props.globalState.qualityLevel = Number(getQualityLevel);
+        }
+
+        //
+        let getCompressionLevel = localStorage.getItem("compressionLevel");
+
+        if (getCompressionLevel) {
+            this.props.globalState.compressionLevel = Number(getCompressionLevel);
+        } else {
+            this.props.globalState.compressionLevel = 2;
+        }
+
+        //
+        const getNeedSupercompression = localStorage.getItem("needSupercompression");
+
+        if (getNeedSupercompression) {
+            this.props.globalState.needSupercompression = parseBool(getNeedSupercompression);
+        }
+
+        //
+        const getGPUInstState = localStorage.getItem("GPUInstanceState");
+
+        if (getGPUInstState) {
+            this.props.globalState.GPUInstanceState = parseBool(getGPUInstState);
+        }
     }
 
     public render() {
@@ -1610,26 +1420,13 @@ export function niceBytes(z: number) {
 export function parseBool(val: any) {
     return val === true || val === "true";
 }
-/*
-async function loadFromMemory(path:string, scene:Scene, blobProp:Blob):Promise<void>{
 
-    return new Promise((resolve) => {
-
-        const assetArrayBuffer =   Tools.LoadFileAsync(path, true);
-  
-        assetArrayBuffer.then((res)=>{
-            const assetBlob = new Blob([res]);
-            blobProp = assetBlob as Blob;
-            const assetUrl = URL.createObjectURL(assetBlob);
-       
-
-       
-        SceneLoader.AppendAsync(assetUrl, undefined, scene, undefined, ".glb");
-       
-    })
-        
-    })
-
-
+export function backfaceCulling(options: any) {
+    return (doc: Document) => {
+        for (const material of doc.getRoot().listMaterials()) {
+            //   console.log(material);
+            //    console.log(options.cull);
+            material.setDoubleSided(!options.cull);
+        }
+    };
 }
-*/
