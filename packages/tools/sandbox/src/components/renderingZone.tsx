@@ -27,6 +27,8 @@ import { MeshoptEncoder, MeshoptSimplifier, MeshoptDecoder } from "meshoptimizer
 
 // import {DracoDecoderModule} from "draco3dgltf";
 
+// import { createWorkerPool } from "../tools/myWorker";
+
 import {
     textureCompress,
     dedup,
@@ -123,6 +125,8 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         this._engine.loadingUIBackgroundColor = "#2A2342";
 
         //  Prepare optimization props
+
+     //   createWorkerPool()
 
         this.checkStorage();
 
@@ -697,7 +701,6 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         });
 
         meshoptPane.on("change", (ev) => {
-            console.log("meshoptPane ", ev.value);
             this.props.globalState.meshoptState = ev.value;
             localStorage.setItem("meshoptState", ev.value.toString());
         });
@@ -940,6 +943,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                         compressionLevel: this.props.globalState.compressionLevel, // 0-5
                         //  isSetKTX2SRGBTransferFunc: true, // by default
                         needSupercompression: this.props.globalState.needSupercompression, // default false
+                        isKTX2File:true
                     });
                     // Assign KTX image to the texture
                     tex.setMimeType("image/ktx2").setImage(imgKTX);
