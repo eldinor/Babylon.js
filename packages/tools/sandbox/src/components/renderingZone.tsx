@@ -91,6 +91,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
     private errorNum: number;
     private reImport: boolean;
     private isGPUinstanced: boolean;
+    private textureImageLoaded: boolean;
 
     public constructor(props: IRenderingZoneProps) {
         super(props);
@@ -126,7 +127,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
         //  Prepare optimization props
 
-     //   createWorkerPool()
+        //   createWorkerPool()
 
         this.checkStorage();
 
@@ -177,6 +178,9 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                     default: {
                         if (isTextureAsset(name)) {
                             setSceneFileToLoad(file);
+                            this.textureImageLoaded = true;
+                        } else {
+                            this.textureImageLoaded = false;
                         }
 
                         break;
@@ -447,598 +451,696 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             this._originBlob = blob as Blob;
         }
 
-        //
-        //  The beginning of everything :)
-        const arr = new Uint8Array(await this._originBlob.arrayBuffer());
+        // The start of very long IF
+        if (!this.textureImageLoaded) {
+            //
+            //  The beginning of everything :)
+            const arr = new Uint8Array(await this._originBlob.arrayBuffer());
 
-        // TODO: make better :)
-        document.getElementById("topLeft")!.innerHTML = this.props.globalState.origFilename;
-        document.getElementById("topLeft")!.innerHTML += " | ";
-        document.getElementById("topLeft")!.innerHTML += "<strong>" + (arr.length / (1024 * 1024)).toFixed(2).toString() + " Mb</strong>";
+            // TODO: make better :)
+            document.getElementById("topLeft")!.innerHTML = this.props.globalState.origFilename;
+            document.getElementById("topLeft")!.innerHTML += " | ";
+            document.getElementById("topLeft")!.innerHTML += "<strong>" + (arr.length / (1024 * 1024)).toFixed(2).toString() + " Mb</strong>";
 
-        const io = new WebIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({
-            "meshopt.decoder": MeshoptDecoder,
-            "meshopt.encoder": MeshoptEncoder,
-        });
-
-        // Creating GLTF-Transform Document
-        const doc = await io.readBinary(arr);
-
-        doc.setLogger(new Logger(Logger.Verbosity.DEBUG));
-
-        // Adding Generator to show in asset metadata
-        doc.getRoot().getAsset().generator = "GLB Optimizer (https://glb.babylonpress.org)";
-
-        let totalVRAM = 0;
-        let hasKTX = false;
-
-        // Calculate VRAM and check KTX textures
-        doc.getRoot()
-            .listTextures()
-            .forEach((tex) => {
-                const vram = ImageUtils.getVRAMByteLength(tex.getImage()!, tex.getMimeType());
-                totalVRAM += vram!;
-
-                if (tex.getMimeType().includes("ktx")) {
-                    hasKTX = true;
-                }
+            const io = new WebIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({
+                "meshopt.decoder": MeshoptDecoder,
+                "meshopt.encoder": MeshoptEncoder,
             });
-        // Reset some values for KTX textures
-        if (hasKTX) {
-            console.log("KTX FOUND!!!");
-            this.props.globalState.resizeValue = "No Resize";
-            this.props.globalState.textureValue = "Keep Original";
-            document.getElementById("topInfo2")!.style.display = "block";
-            document.getElementById("topInfo2")!.innerHTML += "KTX Texture detected. <br/>Texture settings changed to No Resize and Keep Original format.<br/> ";
-            setTimeout(() => {
-                document.getElementById("topInfo2")!.style.display = "none";
-                document.getElementById("topInfo2")!.innerHTML = "";
-            }, 4000);
-        }
 
-        document.getElementById("topLeft")!.innerHTML += " | Texture VRAM " + niceBytes(totalVRAM);
+            // Creating GLTF-Transform Document
+            const doc = await io.readBinary(arr);
 
-        await MeshoptEncoder.ready;
-        //
-        //
-        // PANE
+            doc.setLogger(new Logger(Logger.Verbosity.DEBUG));
 
-        const pane = new Pane({ container: document.getElementById("settings")! });
+            // Adding Generator to show in asset metadata
+            doc.getRoot().getAsset().generator = "GLB Optimizer (https://glb.babylonpress.org)";
 
-        this._scene.onDispose = () => {
-            pane.dispose();
-        };
+            let totalVRAM = 0;
+            let hasKTX = false;
 
-        const f0 = pane.addFolder({
-            title: "Basic Optimization",
-        });
+            // Calculate VRAM and check KTX textures
+            doc.getRoot()
+                .listTextures()
+                .forEach((tex) => {
+                    const vram = ImageUtils.getVRAMByteLength(tex.getImage()!, tex.getMimeType());
+                    totalVRAM += vram!;
 
-        const dedupPane = f0.addBinding({ Dedup: this.props.globalState.dedupState }, "Dedup", {
-            label: "Dedup",
-        });
-
-        dedupPane.on("change", (ev) => {
-            this.props.globalState.dedupState = ev.value;
-            localStorage.setItem("dedupState", ev.value.toString());
-        });
-
-        const prunePane = f0.addBinding({ Prune: this.props.globalState.pruneState }, "Prune", {
-            label: "Prune",
-        });
-
-        prunePane.on("change", (ev) => {
-            this.props.globalState.pruneState = ev.value;
-            localStorage.setItem("pruneState", ev.value.toString());
-        });
-
-        const flattenPane = f0.addBinding({ Flatten: this.props.globalState.flattenState }, "Flatten", {
-            label: "Flatten",
-        });
-
-        flattenPane.on("change", (ev) => {
-            this.props.globalState.flattenState = ev.value;
-            localStorage.setItem("flattenState", ev.value.toString());
-        });
-
-        const joinPane = f0.addBinding({ Join: this.props.globalState.joinState }, "Join", {
-            label: "Join",
-        });
-
-        joinPane.on("change", (ev) => {
-            this.props.globalState.joinState = ev.value;
-            localStorage.setItem("joinState", ev.value.toString());
-        });
-        //
-
-        const resamplePane = f0.addBinding({ Resample: this.props.globalState.resampleState }, "Resample", {
-            label: "Resample Animations",
-        });
-
-        resamplePane.on("change", (ev) => {
-            this.props.globalState.resampleState = ev.value;
-            localStorage.setItem("resampleState", ev.value.toString());
-        });
-        //
-        f0.addBlade({
-            view: "separator",
-        });
-        //
-
-        const sparsePane = f0.addBinding({ Sparse: this.props.globalState.sparseState }, "Sparse", {
-            label: "Sparse",
-        });
-
-        sparsePane.on("change", (ev) => {
-            console.log("sparsePane ", ev.value);
-            this.props.globalState.sparseState = ev.value;
-            localStorage.setItem("sparseState", ev.value.toString());
-        });
-        //
-
-        //
-        const sparseRatioPane = f0.addBinding({ SparseRatio: this.props.globalState.sparseRatio }, "SparseRatio", {
-            label: "Sparse Ratio | Default 1/3",
-            format: (v) => v.toFixed(2),
-        });
-
-        sparseRatioPane.on("change", (ev) => {
-            this.props.globalState.sparseRatio = ev.value;
-            localStorage.setItem("sparseRatio", ev.value.toString());
-        });
-
-        //
-        f0.addBlade({
-            view: "separator",
-        });
-        const weldPane = f0.addBinding({ Weld: this.props.globalState.weldState }, "Weld", {
-            label: "Weld",
-        });
-
-        weldPane.on("change", (ev) => {
-            this.props.globalState.weldState = ev.value;
-            localStorage.setItem("weldState", ev.value.toString());
-        });
-
-        const weldTolerancePane = f0.addBinding({ Tolerance: this.props.globalState.weldTolerance }, "Tolerance", {
-            label: "Tolerance | Default 0.001",
-            format: (v) => v.toFixed(3),
-        });
-
-        weldTolerancePane.on("change", (ev) => {
-            this.props.globalState.weldTolerance = ev.value;
-            localStorage.setItem("weldTolerance", ev.value.toString());
-        });
-
-        const weldToleranceNormalPane = f0.addBinding({ ToleranceNormal: this.props.globalState.weldToleranceNormal }, "ToleranceNormal", {
-            label: "Tolerance Normal| Default 0.25",
-            format: (v) => v.toFixed(2),
-        });
-
-        weldToleranceNormalPane.on("change", (ev) => {
-            this.props.globalState.weldToleranceNormal = ev.value;
-            localStorage.setItem("weldToleranceNormal", ev.value.toString());
-        });
-
-        //
-        const f1 = pane.addFolder({
-            title: "KHR Extensions - Meshoptimizer",
-        });
-        //
-
-        const simplifyPane = f1.addBinding({ Simplify: this.props.globalState.simplifyState }, "Simplify", {
-            label: "Simplify | MeshoptSimplifier",
-        });
-
-        simplifyPane.on("change", (ev) => {
-            this.props.globalState.simplifyState = ev.value;
-            localStorage.setItem("simplifyState", ev.value.toString());
-        });
-        //
-        const simplifyRatioPane = f1.addBinding({ SimplifyRatio: this.props.globalState.simplifyRatio }, "SimplifyRatio", {
-            label: "Simplify Ratio (0-1) | Default 0",
-            format: (v) => v.toFixed(2),
-        });
-
-        simplifyRatioPane.on("change", (ev) => {
-            console.log("simplifyRatioPane ", ev.value);
-            this.props.globalState.simplifyRatio = ev.value;
-            localStorage.setItem("simplifyRatio", ev.value.toString());
-        });
-        //
-        //
-        const simplifyErrorPane = f1.addBinding({ SimplifyRatio: this.props.globalState.simplifyError }, "SimplifyRatio", {
-            label: "Simplify Error Limit | Default 0.0001 (0.01%)",
-            format: (v) => v.toFixed(4),
-        });
-
-        simplifyErrorPane.on("change", (ev) => {
-            console.log("simplifyErrorPane ", ev.value);
-            this.props.globalState.simplifyError = ev.value;
-            localStorage.setItem("simplifyError", ev.value.toString());
-        });
-        //
-        const simplifyLockborderPane = f1.addBinding({ Lockborder: this.props.globalState.simplifyLockborder }, "Lockborder", {
-            label: "Simplify Lockborder | Default: false ",
-        });
-
-        simplifyLockborderPane.on("change", (ev) => {
-            this.props.globalState.simplifyLockborder = ev.value;
-            localStorage.setItem("simplifyLockborder", ev.value.toString());
-        });
-
-        //
-        f1.addBlade({
-            view: "separator",
-        });
-        //
-        const reorderPane = f1.addBinding({ Reorder: this.props.globalState.reorderState }, "Reorder", {
-            label: "Reorder | Pre-process for Meshopt Compression",
-        });
-
-        reorderPane.on("change", (ev) => {
-            this.props.globalState.reorderState = ev.value;
-            localStorage.setItem("reorderState", ev.value.toString());
-        });
-
-        const quantizePane = f1.addBinding({ Quantize: this.props.globalState.quantizeState }, "Quantize", {
-            label: "Quantize | KHR_mesh_quantization",
-        });
-
-        quantizePane.on("change", (ev) => {
-            this.props.globalState.quantizeState = ev.value;
-            localStorage.setItem("quantizeState", ev.value.toString());
-        });
-        //
-        f1.addFolder({
-            title: "Attention! Turn off Reorder and Quantize when select Meshopt",
-            expanded: false,
-        });
-        //
-
-        //
-        const meshoptPane = f1.addBinding({ Meshopt_Compression: this.props.globalState.meshoptState }, "Meshopt_Compression", {
-            label: "Meshopt | EXT_meshopt_compression",
-        });
-
-        meshoptPane.on("change", (ev) => {
-            this.props.globalState.meshoptState = ev.value;
-            localStorage.setItem("meshoptState", ev.value.toString());
-        });
-        //
-        //@ts-ignore
-        const meshoptLevel = f1.addBlade({
-            view: "list",
-            label: "Compression Level",
-            options: [
-                { text: "high", value: "high" },
-                { text: "medium", value: "medium" },
-            ],
-            value: this.props.globalState.meshoptLevel,
-        });
-        //@ts-ignore
-        meshoptLevel.on("change", (ev) => {
-            console.log("meshoptLevel ", ev.value);
-            this.props.globalState.meshoptLevel = ev.value;
-            localStorage.setItem("meshoptLevel", ev.value.toString());
-        });
-
-        //
-        const fKTX = pane.addFolder({
-            title: "KTX2 Compression | KHRTextureBasisu Extension",
-        });
-
-        const qualityLevelPane = fKTX.addBinding({ qualityLevel: this.props.globalState.qualityLevel }, "qualityLevel", {
-            min: 1,
-            max: 255,
-            step: 1,
-            label: "ETC1S Quality Level (255 = best)",
-        });
-
-        qualityLevelPane.on("change", (ev) => {
-            this.props.globalState.qualityLevel = ev.value;
-            localStorage.setItem("qualityLevel", ev.value.toString());
-        });
-
-        //
-        const cpLevelPane = fKTX.addBinding({ compressionLevel: this.props.globalState.compressionLevel }, "compressionLevel", {
-            min: 0,
-            max: 5,
-            step: 1,
-            label: "ETC1S Compression Level (0 = fastest)",
-        });
-
-        cpLevelPane.on("change", (ev) => {
-            this.props.globalState.compressionLevel = ev.value;
-            localStorage.setItem("compressionLevel", ev.value.toString());
-        });
-
-        //
-        const needSupercompressionPane = fKTX.addBinding({ needSupercompression: this.props.globalState.needSupercompression }, "needSupercompression", {
-            label: "Use UASTC Zstandard Supercompression",
-        });
-
-        needSupercompressionPane.on("change", (ev) => {
-            this.props.globalState.needSupercompression = ev.value;
-            localStorage.setItem("needSupercompression", ev.value.toString());
-        });
-        //
-
-        //
-        const fGPUInst = pane.addFolder({
-            title: "GPU Instancing - EXT_mesh_gpu_instancing",
-        });
-        //
-        const GPUInstPane = fGPUInst.addBinding({ GPUInst: this.props.globalState.GPUInstanceState }, "GPUInst", {
-            label: "GPU Instancing",
-        });
-
-        GPUInstPane.on("change", (ev) => {
-            console.log("GPUInstPane ", ev.value);
-            this.props.globalState.GPUInstanceState = ev.value;
-            localStorage.setItem("GPUInstanceState", ev.value.toString());
-        });
-
-        // OTHER SETTINGS
-        const f2 = pane.addFolder({
-            title: "Other",
-        });
-        const resetButton = f2.addButton({
-            title: "RESET",
-            label: "RESET ALL SETTINGS", // optional
-        });
-
-        resetButton.on("click", () => {
-            localStorage.clear();
-            location.reload();
-        });
-        // END Settings Panes
-
-        // Starting to push transform functions to transformsArray
-        const transformsArray = [];
-
-        if (this.props.globalState.dedupState) {
-            transformsArray.push(dedup());
-        }
-        // Check GPU instancing in order to apply only once if true
-        if (!this.isGPUinstanced) {
-            if (this.props.globalState.GPUInstanceState) {
-                transformsArray.push(instance({ min: 2 }));
-                doc.createExtension(EXTMeshGPUInstancing).setRequired(true);
+                    if (tex.getMimeType().includes("ktx")) {
+                        hasKTX = true;
+                    }
+                });
+            // Reset some values for KTX textures
+            if (hasKTX) {
+                console.log("KTX FOUND!!!");
+                this.props.globalState.resizeValue = "No Resize";
+                this.props.globalState.textureValue = "Keep Original";
+                document.getElementById("topInfo2")!.style.display = "block";
+                document.getElementById("topInfo2")!.innerHTML += "KTX Texture detected. <br/>Texture settings changed to No Resize and Keep Original format.<br/> ";
+                setTimeout(() => {
+                    document.getElementById("topInfo2")!.style.display = "none";
+                    document.getElementById("topInfo2")!.innerHTML = "";
+                }, 4000);
             }
-        }
 
-        if (this.props.globalState.pruneState) {
-            transformsArray.push(prune());
-        }
+            document.getElementById("topLeft")!.innerHTML += " | Texture VRAM " + niceBytes(totalVRAM);
 
-        if (this.props.globalState.flattenState) {
-            transformsArray.push(flatten());
-        }
-        if (this.props.globalState.joinState) {
-            transformsArray.push(join({ keepMeshes: false, keepNamed: false }));
-        }
-
-        if (this.props.globalState.resampleState) {
-            transformsArray.push(resample());
-        }
-
-        if (this.props.globalState.weldState) {
-            transformsArray.push(weld({ exhaustive: false, tolerance: this.props.globalState.weldTolerance, toleranceNormal: this.props.globalState.weldToleranceNormal }));
-        }
-
-        if (this.props.globalState.simplifyState) {
-            transformsArray.push(
-                simplify({
-                    simplifier: MeshoptSimplifier,
-                    ratio: this.props.globalState.simplifyRatio,
-                    error: this.props.globalState.simplifyError,
-                    lockBorder: this.props.globalState.simplifyLockborder,
-                })
-            );
-        }
-
-        if (this.props.globalState.reorderState) {
-            transformsArray.push(reorder({ encoder: MeshoptEncoder }));
-        }
-        if (this.props.globalState.quantizeState) {
-            transformsArray.push(quantize());
-        }
-        if (this.props.globalState.meshoptState) {
-            if (this.props.globalState.meshoptLevel == "high") {
-                transformsArray.push(meshopt({ encoder: MeshoptEncoder, level: "high" }));
-            } else {
-                transformsArray.push(meshopt({ encoder: MeshoptEncoder, level: "medium" }));
-            }
-        }
-        //
-        if (this.props.globalState.sparseState) {
-            transformsArray.push(sparse({ ratio: this.props.globalState.sparseRatio }));
-        }
-        //
-
-        // Preparing KTX Conversion
-        let myFunc;
-        let myOptions;
-
-        let texMode;
-
-        if (this.props.globalState.textureValue == "ktx2/UASTC") {
-            texMode = true;
-        }
-        if (this.props.globalState.textureValue == "ktx2/ETC1S") {
-            texMode = false;
-        }
-
-        if (this.props.globalState.textureValue == "ktx2/UASTC" || this.props.globalState.textureValue == "ktx2/ETC1S" || this.props.globalState.textureValue == "ktx2/MIX") {
-            //   console.log("KTX2");
-
-            //   TODO: convert to function
-            document.getElementById("ktx-container")!.style.display = "initial";
-            document.getElementById("ktx")!.innerHTML = "Starting KTX2 Conversion...";
+            await MeshoptEncoder.ready;
             //
+            //
+            // PANE
+
+            const pane = new Pane({ container: document.getElementById("settings")! });
+
+            this._scene.onDispose = () => {
+                pane.dispose();
+            };
+
+            const f0 = pane.addFolder({
+                title: "Basic Optimization",
+            });
+
+            const dedupPane = f0.addBinding({ Dedup: this.props.globalState.dedupState }, "Dedup", {
+                label: "Dedup",
+            });
+
+            dedupPane.on("change", (ev) => {
+                this.props.globalState.dedupState = ev.value;
+                localStorage.setItem("dedupState", ev.value.toString());
+            });
+
+            const prunePane = f0.addBinding({ Prune: this.props.globalState.pruneState }, "Prune", {
+                label: "Prune",
+            });
+
+            prunePane.on("change", (ev) => {
+                this.props.globalState.pruneState = ev.value;
+                localStorage.setItem("pruneState", ev.value.toString());
+            });
+
+            const flattenPane = f0.addBinding({ Flatten: this.props.globalState.flattenState }, "Flatten", {
+                label: "Flatten",
+            });
+
+            flattenPane.on("change", (ev) => {
+                this.props.globalState.flattenState = ev.value;
+                localStorage.setItem("flattenState", ev.value.toString());
+            });
+
+            const joinPane = f0.addBinding({ Join: this.props.globalState.joinState }, "Join", {
+                label: "Join",
+            });
+
+            joinPane.on("change", (ev) => {
+                this.props.globalState.joinState = ev.value;
+                localStorage.setItem("joinState", ev.value.toString());
+            });
+            //
+
+            const resamplePane = f0.addBinding({ Resample: this.props.globalState.resampleState }, "Resample", {
+                label: "Resample Animations",
+            });
+
+            resamplePane.on("change", (ev) => {
+                this.props.globalState.resampleState = ev.value;
+                localStorage.setItem("resampleState", ev.value.toString());
+            });
+            //
+            f0.addBlade({
+                view: "separator",
+            });
+            //
+
+            const sparsePane = f0.addBinding({ Sparse: this.props.globalState.sparseState }, "Sparse", {
+                label: "Sparse",
+            });
+
+            sparsePane.on("change", (ev) => {
+                console.log("sparsePane ", ev.value);
+                this.props.globalState.sparseState = ev.value;
+                localStorage.setItem("sparseState", ev.value.toString());
+            });
+            //
+
+            //
+            const sparseRatioPane = f0.addBinding({ SparseRatio: this.props.globalState.sparseRatio }, "SparseRatio", {
+                label: "Sparse Ratio | Default 1/3",
+                format: (v) => v.toFixed(2),
+            });
+
+            sparseRatioPane.on("change", (ev) => {
+                this.props.globalState.sparseRatio = ev.value;
+                localStorage.setItem("sparseRatio", ev.value.toString());
+            });
+
+            //
+            f0.addBlade({
+                view: "separator",
+            });
+            const weldPane = f0.addBinding({ Weld: this.props.globalState.weldState }, "Weld", {
+                label: "Weld",
+            });
+
+            weldPane.on("change", (ev) => {
+                this.props.globalState.weldState = ev.value;
+                localStorage.setItem("weldState", ev.value.toString());
+            });
+
+            const weldTolerancePane = f0.addBinding({ Tolerance: this.props.globalState.weldTolerance }, "Tolerance", {
+                label: "Tolerance | Default 0.001",
+                format: (v) => v.toFixed(3),
+            });
+
+            weldTolerancePane.on("change", (ev) => {
+                this.props.globalState.weldTolerance = ev.value;
+                localStorage.setItem("weldTolerance", ev.value.toString());
+            });
+
+            const weldToleranceNormalPane = f0.addBinding({ ToleranceNormal: this.props.globalState.weldToleranceNormal }, "ToleranceNormal", {
+                label: "Tolerance Normal| Default 0.25",
+                format: (v) => v.toFixed(2),
+            });
+
+            weldToleranceNormalPane.on("change", (ev) => {
+                this.props.globalState.weldToleranceNormal = ev.value;
+                localStorage.setItem("weldToleranceNormal", ev.value.toString());
+            });
+
+            //
+            const f1 = pane.addFolder({
+                title: "KHR Extensions - Meshoptimizer",
+            });
+            //
+
+            const simplifyPane = f1.addBinding({ Simplify: this.props.globalState.simplifyState }, "Simplify", {
+                label: "Simplify | MeshoptSimplifier",
+            });
+
+            simplifyPane.on("change", (ev) => {
+                this.props.globalState.simplifyState = ev.value;
+                localStorage.setItem("simplifyState", ev.value.toString());
+            });
+            //
+            const simplifyRatioPane = f1.addBinding({ SimplifyRatio: this.props.globalState.simplifyRatio }, "SimplifyRatio", {
+                label: "Simplify Ratio (0-1) | Default 0",
+                format: (v) => v.toFixed(2),
+            });
+
+            simplifyRatioPane.on("change", (ev) => {
+                console.log("simplifyRatioPane ", ev.value);
+                this.props.globalState.simplifyRatio = ev.value;
+                localStorage.setItem("simplifyRatio", ev.value.toString());
+            });
+            //
+            //
+            const simplifyErrorPane = f1.addBinding({ SimplifyRatio: this.props.globalState.simplifyError }, "SimplifyRatio", {
+                label: "Simplify Error Limit | Default 0.0001 (0.01%)",
+                format: (v) => v.toFixed(4),
+            });
+
+            simplifyErrorPane.on("change", (ev) => {
+                console.log("simplifyErrorPane ", ev.value);
+                this.props.globalState.simplifyError = ev.value;
+                localStorage.setItem("simplifyError", ev.value.toString());
+            });
+            //
+            const simplifyLockborderPane = f1.addBinding({ Lockborder: this.props.globalState.simplifyLockborder }, "Lockborder", {
+                label: "Simplify Lockborder | Default: false ",
+            });
+
+            simplifyLockborderPane.on("change", (ev) => {
+                this.props.globalState.simplifyLockborder = ev.value;
+                localStorage.setItem("simplifyLockborder", ev.value.toString());
+            });
+
+            //
+            f1.addBlade({
+                view: "separator",
+            });
+            //
+            const reorderPane = f1.addBinding({ Reorder: this.props.globalState.reorderState }, "Reorder", {
+                label: "Reorder | Pre-process for Meshopt Compression",
+            });
+
+            reorderPane.on("change", (ev) => {
+                this.props.globalState.reorderState = ev.value;
+                localStorage.setItem("reorderState", ev.value.toString());
+            });
+
+            const quantizePane = f1.addBinding({ Quantize: this.props.globalState.quantizeState }, "Quantize", {
+                label: "Quantize | KHR_mesh_quantization",
+            });
+
+            quantizePane.on("change", (ev) => {
+                this.props.globalState.quantizeState = ev.value;
+                localStorage.setItem("quantizeState", ev.value.toString());
+            });
+            //
+            f1.addFolder({
+                title: "Attention! Turn off Reorder and Quantize when select Meshopt",
+                expanded: false,
+            });
+            //
+
+            //
+            const meshoptPane = f1.addBinding({ Meshopt_Compression: this.props.globalState.meshoptState }, "Meshopt_Compression", {
+                label: "Meshopt | EXT_meshopt_compression",
+            });
+
+            meshoptPane.on("change", (ev) => {
+                this.props.globalState.meshoptState = ev.value;
+                localStorage.setItem("meshoptState", ev.value.toString());
+            });
+            //
+            //@ts-ignore
+            const meshoptLevel = f1.addBlade({
+                view: "list",
+                label: "Compression Level",
+                options: [
+                    { text: "high", value: "high" },
+                    { text: "medium", value: "medium" },
+                ],
+                value: this.props.globalState.meshoptLevel,
+            });
+            //@ts-ignore
+            meshoptLevel.on("change", (ev) => {
+                console.log("meshoptLevel ", ev.value);
+                this.props.globalState.meshoptLevel = ev.value;
+                localStorage.setItem("meshoptLevel", ev.value.toString());
+            });
+
+            //
+            const fKTX = pane.addFolder({
+                title: "KTX2 Compression | KHRTextureBasisu Extension",
+            });
+
+            const qualityLevelPane = fKTX.addBinding({ qualityLevel: this.props.globalState.qualityLevel }, "qualityLevel", {
+                min: 1,
+                max: 255,
+                step: 1,
+                label: "ETC1S Quality Level (255 = best)",
+            });
+
+            qualityLevelPane.on("change", (ev) => {
+                this.props.globalState.qualityLevel = ev.value;
+                localStorage.setItem("qualityLevel", ev.value.toString());
+            });
+
+            //
+            const cpLevelPane = fKTX.addBinding({ compressionLevel: this.props.globalState.compressionLevel }, "compressionLevel", {
+                min: 0,
+                max: 5,
+                step: 1,
+                label: "ETC1S Compression Level (0 = fastest)",
+            });
+
+            cpLevelPane.on("change", (ev) => {
+                this.props.globalState.compressionLevel = ev.value;
+                localStorage.setItem("compressionLevel", ev.value.toString());
+            });
+
+            //
+            const needSupercompressionPane = fKTX.addBinding({ needSupercompression: this.props.globalState.needSupercompression }, "needSupercompression", {
+                label: "Use UASTC Zstandard Supercompression",
+            });
+
+            needSupercompressionPane.on("change", (ev) => {
+                this.props.globalState.needSupercompression = ev.value;
+                localStorage.setItem("needSupercompression", ev.value.toString());
+            });
+            //
+            //@ts-ignore
+            const userKTX = fKTX.addFolder({
+                title: "User Defined KTX2 Compression for Texture Slots",
+            });
+            userKTX.disabled = true;
+            userKTX.expanded = false;
+
+            if (this.props.globalState.textureValue == "KTX2/USER") {
+                userKTX.disabled = false;
+                userKTX.expanded = true;
+            }
+            //
+            const baseColorPane = userKTX.addBinding({ baseColor: this.props.globalState.baseColor }, "baseColor", {
+                label: "Base/Albedo | baseColorTexture -> UASTC",
+            });
+            baseColorPane.on("change", (ev) => {
+                this.props.globalState.baseColor = ev.value;
+                localStorage.setItem("baseColor", ev.value.toString());
+            });
+            //
+            const normalPane = userKTX.addBinding({ Normal: this.props.globalState.normal }, "Normal", {
+                label: "Normal|Bump | normalTexture -> UASTC",
+            });
+            normalPane.on("change", (ev) => {
+                this.props.globalState.normal = ev.value;
+                localStorage.setItem("normal", ev.value.toString());
+            });
+            //
+            const metallicPane = userKTX.addBinding({ Metallic: this.props.globalState.metallic }, "Metallic", {
+                label: "Metallic | metallicRoughnessTexture -> UASTC",
+            });
+            metallicPane.on("change", (ev) => {
+                this.props.globalState.metallic = ev.value;
+                localStorage.setItem("metallic", ev.value.toString());
+            });
+            //
+            const emissivePane = userKTX.addBinding({ Emissive: this.props.globalState.emissive }, "Emissive", {
+                label: "Emissive | emissiveTexture -> UASTC",
+            });
+            emissivePane.on("change", (ev) => {
+                this.props.globalState.emissive = ev.value;
+                localStorage.setItem("emissive", ev.value.toString());
+            });
+            //
+            const occlusionPane = userKTX.addBinding({ Occlusion: this.props.globalState.occlusion }, "Occlusion", {
+                label: "Occlusion | occlusionTexture -> UASTC",
+            });
+            occlusionPane.on("change", (ev) => {
+                this.props.globalState.occlusion = ev.value;
+                localStorage.setItem("occlusion", ev.value.toString());
+            });
+
+            //
+            const fGPUInst = pane.addFolder({
+                title: "GPU Instancing - EXT_mesh_gpu_instancing",
+            });
+            //
+            const GPUInstPane = fGPUInst.addBinding({ GPUInst: this.props.globalState.GPUInstanceState }, "GPUInst", {
+                label: "GPU Instancing",
+            });
+
+            GPUInstPane.on("change", (ev) => {
+                console.log("GPUInstPane ", ev.value);
+                this.props.globalState.GPUInstanceState = ev.value;
+                localStorage.setItem("GPUInstanceState", ev.value.toString());
+            });
+
+            // OTHER SETTINGS
+            const f2 = pane.addFolder({
+                title: "Other",
+            });
+            const resetButton = f2.addButton({
+                title: "RESET",
+                label: "RESET ALL SETTINGS", // optional
+            });
+
+            resetButton.on("click", () => {
+                localStorage.clear();
+                location.reload();
+            });
+            // END Settings Panes
+
+            // Starting to push transform functions to transformsArray
+            const transformsArray = [];
+
+            if (this.props.globalState.dedupState) {
+                transformsArray.push(dedup());
+            }
+            // Check GPU instancing in order to apply only once if true
+            if (!this.isGPUinstanced) {
+                if (this.props.globalState.GPUInstanceState) {
+                    transformsArray.push(instance({ min: 2 }));
+                    doc.createExtension(EXTMeshGPUInstancing).setRequired(true);
+                }
+            }
+
+            if (this.props.globalState.pruneState) {
+                transformsArray.push(prune());
+            }
+
+            if (this.props.globalState.flattenState) {
+                transformsArray.push(flatten());
+            }
+            if (this.props.globalState.joinState) {
+                transformsArray.push(join({ keepMeshes: false, keepNamed: false }));
+            }
+
+            if (this.props.globalState.resampleState) {
+                transformsArray.push(resample());
+            }
+
+            if (this.props.globalState.weldState) {
+                transformsArray.push(weld({ exhaustive: false, tolerance: this.props.globalState.weldTolerance, toleranceNormal: this.props.globalState.weldToleranceNormal }));
+            }
+
+            if (this.props.globalState.simplifyState) {
+                transformsArray.push(
+                    simplify({
+                        simplifier: MeshoptSimplifier,
+                        ratio: this.props.globalState.simplifyRatio,
+                        error: this.props.globalState.simplifyError,
+                        lockBorder: this.props.globalState.simplifyLockborder,
+                    })
+                );
+            }
+
+            if (this.props.globalState.reorderState) {
+                transformsArray.push(reorder({ encoder: MeshoptEncoder }));
+            }
+            if (this.props.globalState.quantizeState) {
+                transformsArray.push(quantize());
+            }
+            if (this.props.globalState.meshoptState) {
+                if (this.props.globalState.meshoptLevel == "high") {
+                    transformsArray.push(meshopt({ encoder: MeshoptEncoder, level: "high" }));
+                } else {
+                    transformsArray.push(meshopt({ encoder: MeshoptEncoder, level: "medium" }));
+                }
+            }
+            //
+            if (this.props.globalState.sparseState) {
+                transformsArray.push(sparse({ ratio: this.props.globalState.sparseRatio }));
+            }
+            //
+
+            // Preparing KTX Conversion
+            let myFunc;
+            let myOptions;
+
+            let texMode;
+
             if (this.props.globalState.textureValue == "ktx2/UASTC") {
-                document.getElementById("ktx")!.innerHTML +=
-                    "<br/>UASTC is designed for efficient interchange of very high quality GPU texture data while being quickly transcodable to numerous other hardware GPU texture formats. ";
+                texMode = true;
             }
-
             if (this.props.globalState.textureValue == "ktx2/ETC1S") {
-                document.getElementById("ktx")!.innerHTML +=
-                    "<br/>ETC1S is the original low/medium quality mode, producing lower file size but with lower quality in comparison with UASTC. To use ETC1S only on albedo textures choose <strong>ktx2/MIX</strong> Texture Format.";
+                texMode = false;
             }
 
-            if (this.props.globalState.textureValue == "ktx2/MIX") {
-                document.getElementById("ktx")!.innerHTML +=
-                    "<br/> In the MIX mode albedo (baseColor) textures are processed with ETC1S.<br/> Textures from all other channels are compressed with UASTC.";
-            }
+            if (
+                this.props.globalState.textureValue == "ktx2/UASTC" ||
+                this.props.globalState.textureValue == "ktx2/ETC1S" ||
+                this.props.globalState.textureValue == "ktx2/MIX" ||
+                this.props.globalState.textureValue == "KTX2/USER"
+            ) {
+                //   console.log("KTX2");
 
-            if (this.props.globalState.resizeValue !== "No Resize") {
-                myOptions = { resize: [Number(this.props.globalState.resizeValue), Number(this.props.globalState.resizeValue)] };
-                myFunc = textureCompress(myOptions as any);
-                await doc.transform(myFunc);
-            }
-            //
-            // START KTX
-
-            console.log("Starting KTX2 Conversion");
-
-            let totalTime = 0;
-            let timer = 0;
-
-            for (const tex of doc.getRoot().listTextures()) {
-                timer = Date.now();
-                let img = tex.getImage();
-
-                let mt = tex.getMimeType();
-                let texType;
-
-                if (mt.includes("jpeg")) {
-                    texType = 0;
-                }
-                if (mt.includes("png")) {
-                    texType = 1;
-                }
+                //   TODO: convert to function
+                document.getElementById("ktx-container")!.style.display = "initial";
+                document.getElementById("ktx")!.innerHTML = "Starting KTX2 Conversion...";
                 //
-                //
+                if (this.props.globalState.textureValue == "ktx2/UASTC") {
+                    document.getElementById("ktx")!.innerHTML +=
+                        "<br/>UASTC is designed for efficient interchange of very high quality GPU texture data while being quickly transcodable to numerous other hardware GPU texture formats. ";
+                }
+
+                if (this.props.globalState.textureValue == "ktx2/ETC1S") {
+                    document.getElementById("ktx")!.innerHTML +=
+                        "<br/>ETC1S is the original low/medium quality mode, producing lower file size but with lower quality in comparison with UASTC. To use ETC1S only on albedo textures choose <strong>ktx2/MIX</strong> Texture Format.";
+                }
+
                 if (this.props.globalState.textureValue == "ktx2/MIX") {
-                    const slots = listTextureSlots(tex);
-                    console.log(slots);
+                    document.getElementById("ktx")!.innerHTML +=
+                        "<br/> In the MIX mode albedo (baseColor) textures are processed with ETC1S.<br/> Textures from all other channels are compressed with UASTC.";
+                }
 
-                    for (const slot of slots) {
-                        if (slot.includes("baseColor")) {
-                            texMode = false;
-                        } else {
-                            texMode = true;
+                if (this.props.globalState.textureValue == "KTX2/USER") {
+                    document.getElementById("ktx")!.innerHTML += "<br/>User defined KTX2 conversion for each texture slot.";
+                }
+
+                if (this.props.globalState.resizeValue !== "No Resize") {
+                    myOptions = { resize: [Number(this.props.globalState.resizeValue), Number(this.props.globalState.resizeValue)] };
+                    myFunc = textureCompress(myOptions as any);
+                    await doc.transform(myFunc);
+                }
+                //
+                // START KTX
+
+                console.log("Starting KTX2 Conversion");
+                console.log(this.props.globalState.textureValue);
+
+                let totalTime = 0;
+                let timer = 0;
+
+                for (const tex of doc.getRoot().listTextures()) {
+                    timer = Date.now();
+                    let img = tex.getImage();
+
+                    let mt = tex.getMimeType();
+                    let texType;
+
+                    if (mt.includes("jpeg")) {
+                        texType = 0;
+                    }
+                    if (mt.includes("png")) {
+                        texType = 1;
+                    }
+                    //
+                    //
+                    if (this.props.globalState.textureValue == "ktx2/MIX") {
+                        const slots = listTextureSlots(tex);
+                        console.log(slots);
+
+                        for (const slot of slots) {
+                            if (slot.includes("baseColor")) {
+                                texMode = false;
+                            } else {
+                                texMode = true;
+                            }
                         }
                     }
-                }
+                    //
+                    // User mode
+                    if (this.props.globalState.textureValue == "KTX2/USER") {
+                        console.log("USER TEX");
+                        const slots = listTextureSlots(tex);
+                        console.log(slots);
+
+                        for (const slot of slots) {
+                            if (slot.includes("baseColor")) {
+                                texMode = this.props.globalState.baseColor;
+                                console.log("baseColor ", texMode);
+                            }
+                            if (slot.includes("normal")) {
+                                texMode = this.props.globalState.normal;
+                                console.log("normal ", texMode);
+                            }
+                            if (slot.includes("metallic")) {
+                                texMode = this.props.globalState.metallic;
+                                console.log("metallic ", texMode);
+                            }
+                            if (slot.includes("emissive")) {
+                                texMode = this.props.globalState.emissive;
+                                console.log("emissive ", texMode);
+                            }
+                            if (slot.includes("occlusion")) {
+                                texMode = this.props.globalState.occlusion;
+                                console.log("occlusion ", texMode);
+                            }
+                        }
+                    }
+                    //
+
+                    if (img) {
+                        let imgKTX = await ktx.encodeToKTX2(img.buffer, {
+                            type: texType,
+                            enableDebug: false, // TODO: make checkbox
+                            generateMipmap: true, // TODO: make checkbox
+                            isUASTC: texMode,
+                            qualityLevel: this.props.globalState.qualityLevel, // 1-255
+                            compressionLevel: this.props.globalState.compressionLevel, // 0-5
+                            //  isSetKTX2SRGBTransferFunc: true, // by default
+                            needSupercompression: this.props.globalState.needSupercompression, // default false
+                            isKTX2File: true,
+                        });
+                        // Assign KTX image to the texture
+                        tex.setMimeType("image/ktx2").setImage(imgKTX);
+                    }
+
+                    // KTX2 Texture converted
+                    console.log(tex.getName());
+                    console.log(tex.getSize()![0] + " * " + tex.getSize()![1]);
+
+                    console.log(((Date.now() - timer) * 0.001).toFixed(2) + " seconds");
+                    totalTime += Number(((Date.now() - timer) * 0.001).toFixed(2));
+                } // All textures converted to KTX
+
+                doc.createExtension(KHRTextureBasisu).setRequired(true);
+
+                console.log("Total Conversion Time " + totalTime.toFixed(2) + " seconds");
+
+                document.getElementById("ktx")!.innerHTML = "Total Conversion Time " + totalTime.toFixed(2) + " seconds";
+
+                console.log("Finished KTX2 Conversion, fixing...");
+                // Apply KTXFix
+                timer = Date.now();
+                await doc.transform(ktxfix());
+
+                console.log("The correction took " + ((Date.now() - timer) * 0.001).toFixed(2) + " seconds");
+
+                document.getElementById("ktx")!.innerHTML += "<br/> Done!";
+
                 //
+                this._scene.onPointerObservable.addOnce(function () {
+                    setTimeout(() => {
+                        document.getElementById("ktx-container")!.style.display = "none";
+                    }, 3000);
+                });
+                //
+            }
+            // Start texture resizing and converting to the chosen format
+            if (this.props.globalState.textureValue !== "Keep Original" && this.props.globalState.textureValue !== "ktx2") {
+                myOptions = { targetFormat: this.props.globalState.textureValue } as TextureCompressOptions;
+                myFunc = textureCompress(myOptions);
 
-                if (img) {
-                    let imgKTX = await ktx.encodeToKTX2(img.buffer, {
-                        type: texType,
-                        enableDebug: false, // TODO: make checkbox
-                        generateMipmap: true, // TODO: make checkbox
-                        isUASTC: texMode,
-                        qualityLevel: this.props.globalState.qualityLevel, // 1-255
-                        compressionLevel: this.props.globalState.compressionLevel, // 0-5
-                        //  isSetKTX2SRGBTransferFunc: true, // by default
-                        needSupercompression: this.props.globalState.needSupercompression, // default false
-                        isKTX2File:true
-                    });
-                    // Assign KTX image to the texture
-                    tex.setMimeType("image/ktx2").setImage(imgKTX);
+                if (this.props.globalState.resizeValue !== "No Resize") {
+                    myOptions = {
+                        targetFormat: this.props.globalState.textureValue,
+                        resize: [Number(this.props.globalState.resizeValue), Number(this.props.globalState.resizeValue)],
+                    };
+                    myFunc = textureCompress(myOptions as TextureCompressOptions);
                 }
+            } else {
+                if (this.props.globalState.resizeValue !== "No Resize") {
+                    myOptions = { resize: [Number(this.props.globalState.resizeValue), Number(this.props.globalState.resizeValue)] };
+                    myFunc = textureCompress(myOptions as TextureCompressOptions);
+                }
+            }
+            if (myFunc) {
+                transformsArray.push(myFunc);
+            }
+            // Start to transform with all functions from transformsArray
+            await doc.transform(...transformsArray);
 
-                // KTX2 Texture converted
-                console.log(tex.getName());
-                console.log(tex.getSize()![0] + " * " + tex.getSize()![1]);
+            totalVRAM = 0;
+            doc.getRoot()
+                .listTextures()
+                .forEach((tex) => {
+                    const vram = ImageUtils.getVRAMByteLength(tex.getImage()!, tex.getMimeType());
+                    totalVRAM += vram!;
+                });
 
-                console.log(((Date.now() - timer) * 0.001).toFixed(2) + " seconds");
-                totalTime += Number(((Date.now() - timer) * 0.001).toFixed(2));
-            } // All textures converted to KTX
+            //    console.log("TOTAL OPTIMIZED VRAM " + niceBytes(totalVRAM))
 
-            doc.createExtension(KHRTextureBasisu).setRequired(true);
+            //        await doc.transform(backfaceCulling({cull:false}))
 
-            console.log("Total Conversion Time " + totalTime.toFixed(2) + " seconds");
+            // Starting to output optimized GLB
+            const glb = await io.writeBinary(doc);
 
-            document.getElementById("ktx")!.innerHTML = "Total Conversion Time " + totalTime.toFixed(2) + " seconds";
+            const assetBlob = new Blob([glb]);
+            const assetUrl = URL.createObjectURL(assetBlob);
 
-            console.log("Finished KTX2 Conversion, fixing...");
-            // Apply KTXFix
-            timer = Date.now();
-            await doc.transform(ktxfix());
+            const newGLB = await SceneLoader.ImportMeshAsync("", assetUrl, undefined, this._scene, undefined, ".glb");
 
-            console.log("The correction took " + ((Date.now() - timer) * 0.001).toFixed(2) + " seconds");
+            this.props.globalState.optURL = assetUrl;
 
-            document.getElementById("ktx")!.innerHTML += "<br/> Done!";
+            // TODO: Convert to something better
+            document.getElementById("topRight")!.innerHTML =
+                "Optimized: <strong>" +
+                (glb.length / (1024 * 1024)).toFixed(2).toString() +
+                " Mb</strong> | Resize: <strong>" +
+                this.props.globalState.resizeValue +
+                "</strong> | Texture: <strong>" +
+                this.props.globalState.textureValue +
+                "</strong>";
+            document.getElementById("topRight")!.innerHTML += " | OPTIMIZED VRAM " + niceBytes(totalVRAM);
 
-            //
-            this._scene.onPointerObservable.addOnce(function () {
-                setTimeout(() => {
-                    document.getElementById("ktx-container")!.style.display = "none";
-                }, 3000);
+            newGLB.meshes[0].getChildMeshes().forEach((element) => {
+                element.layerMask = 0x20000000;
             });
             //
+            console.log("Memory Used: ", niceBytes((window.performance as any).memory.usedJSHeapSize));
+            // END of all
         }
-        // Start texture resizing and converting to the chosen format
-        if (this.props.globalState.textureValue !== "Keep Original" && this.props.globalState.textureValue !== "ktx2") {
-            myOptions = { targetFormat: this.props.globalState.textureValue } as TextureCompressOptions;
-            myFunc = textureCompress(myOptions);
-
-            if (this.props.globalState.resizeValue !== "No Resize") {
-                myOptions = { targetFormat: this.props.globalState.textureValue, resize: [Number(this.props.globalState.resizeValue), Number(this.props.globalState.resizeValue)] };
-                myFunc = textureCompress(myOptions as TextureCompressOptions);
-            }
-        } else {
-            if (this.props.globalState.resizeValue !== "No Resize") {
-                myOptions = { resize: [Number(this.props.globalState.resizeValue), Number(this.props.globalState.resizeValue)] };
-                myFunc = textureCompress(myOptions as TextureCompressOptions);
-            }
-        }
-        if (myFunc) {
-            transformsArray.push(myFunc);
-        }
-        // Start to transform with all functions from transformsArray
-        await doc.transform(...transformsArray);
-
-        totalVRAM = 0;
-        doc.getRoot()
-            .listTextures()
-            .forEach((tex) => {
-                const vram = ImageUtils.getVRAMByteLength(tex.getImage()!, tex.getMimeType());
-                totalVRAM += vram!;
-            });
-
-        //    console.log("TOTAL OPTIMIZED VRAM " + niceBytes(totalVRAM))
-
-        //        await doc.transform(backfaceCulling({cull:false}))
-
-        // Starting to output optimized GLB
-        const glb = await io.writeBinary(doc);
-
-        const assetBlob = new Blob([glb]);
-        const assetUrl = URL.createObjectURL(assetBlob);
-
-        const newGLB = await SceneLoader.ImportMeshAsync("", assetUrl, undefined, this._scene, undefined, ".glb");
-
-        this.props.globalState.optURL = assetUrl;
-
-        // TODO: Convert to something better
-        document.getElementById("topRight")!.innerHTML =
-            "Optimized: <strong>" +
-            (glb.length / (1024 * 1024)).toFixed(2).toString() +
-            " Mb</strong> | Resize: <strong>" +
-            this.props.globalState.resizeValue +
-            "</strong> | Texture: <strong>" +
-            this.props.globalState.textureValue +
-            "</strong>";
-        document.getElementById("topRight")!.innerHTML += " | OPTIMIZED VRAM " + niceBytes(totalVRAM);
-
-        newGLB.meshes[0].getChildMeshes().forEach((element) => {
-            element.layerMask = 0x20000000;
-        });
-        //
-        console.log("Memory Used: ", niceBytes((window.performance as any).memory.usedJSHeapSize));
     } //
 
     //
@@ -1390,7 +1492,38 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         if (getNeedSupercompression) {
             this.props.globalState.needSupercompression = parseBool(getNeedSupercompression);
         }
+        //
 
+        const getBaseColor = localStorage.getItem("baseColor");
+
+        if (getBaseColor) {
+            this.props.globalState.baseColor = parseBool(getBaseColor);
+        }
+        //
+        const getNormal = localStorage.getItem("normal");
+
+        if (getNormal) {
+            this.props.globalState.normal = parseBool(getNormal);
+        }
+        //
+        const getMetallic = localStorage.getItem("metallic");
+
+        if (getMetallic) {
+            this.props.globalState.metallic = parseBool(getMetallic);
+        }
+        //
+        const getEmissive = localStorage.getItem("emissive");
+
+        if (getEmissive) {
+            this.props.globalState.emissive = parseBool(getEmissive);
+        }
+        //
+        const getOcclusion = localStorage.getItem("occlusion");
+
+        if (getOcclusion) {
+            this.props.globalState.occlusion = parseBool(getOcclusion);
+        }
+        //
         //
         const getGPUInstState = localStorage.getItem("GPUInstanceState");
 

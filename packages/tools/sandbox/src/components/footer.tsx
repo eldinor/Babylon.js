@@ -35,7 +35,7 @@ interface IFooterProps {
 export class Footer extends React.Component<IFooterProps> {
     private _cameraNames: string[] = [];
     public resizeOptions: string[] = ["No Resize", "2048", "1024", "512", "256"];
-    public textureOptions: string[] = ["Keep Original", "webp", "png", "ktx2/UASTC", "ktx2/ETC1S", "ktx2/MIX"];
+    public textureOptions: string[] = ["Keep Original", "webp", "png", "ktx2/UASTC", "ktx2/ETC1S", "ktx2/MIX", "KTX2/USER",];
 
 
 

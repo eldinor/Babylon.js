@@ -69,6 +69,12 @@ export class GlobalState {
 
     public needSupercompression: boolean = false;
 
+    public baseColor: boolean = false;
+    public normal: boolean = false;
+    public metallic: boolean = false;
+    public emissive: boolean = false;
+    public occlusion: boolean = false;
+
     public showDebugLayer() {
         this.isDebugLayerEnabled = true;
         if (this.currentScene) {

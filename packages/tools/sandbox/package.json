@@ -22,6 +22,7 @@
     },
     "dependencies": {
         "draco3dgltf": "^1.5.6",
+        "ktx2-encoder": "^0.1.0",
         "meshoptimizer": "^0.20.0",
         "react": "^17.0.2",
         "react-dom": "^17.0.2",
