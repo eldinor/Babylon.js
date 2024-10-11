@@ -226,6 +226,8 @@ export class Sandbox extends React.Component<ISandboxProps, { isFooterVisible: b
                     <div id="help">
                         <h2>Instant reload - press 'R' to reload the file with new optimization settings applied.</h2>
 
+<p>Discuss or report errors at <a href="https://forum.babylonjs.com/t/glb-optimizer-for-geometry-and-texture-conversion-webp-and-ktx2/47416" target="_blank">Babylon Forum</a></p>
+
                         <h1>Basic Optimization</h1>
                         <h2>Dedup</h2>
                         <p>Removes duplicate Accessor, Mesh, Texture, and Material properties.</p>

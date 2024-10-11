@@ -23,6 +23,7 @@ import iconFullScreen from "../../Assets/icon_Fullscreen.svg";
 import iconTex from "../../Assets/Icon_EditModel.svg";
 import iconDash from "../../Assets/Icon_Dashboard.svg";
 import iconWireframe from "../../Assets/Icon_Wireframe.svg"
+import iconDownloadKTX from "../img/icon-downloadktx.svg"
 
 import { compareImages } from "../tools/compareImages";
 import { Tools } from "core/Misc/tools";
@@ -69,6 +70,19 @@ export class Footer extends React.Component<IFooterProps> {
         }
     }
     //
+    exportKTX(){
+        console.log("exportKTX")
+        if (this.props.globalState.textureAssetURL) {
+            //   console.log("showURL");
+            //  console.log(this.props.globalStextureAssetURLtate.optURL);
+
+            const link = document.createElement("a");
+            link.href = this.props.globalState.textureAssetURL;
+            link.download = "converted"+".ktx2";
+        //    link.download = this.props.globalState.origFilename.replace(/\.[^/.]+$/, "") + "-opt"+".ktx2";
+            link.click();
+        }
+    }
     //
 
     makeScreenshot() {
@@ -87,29 +101,11 @@ export class Footer extends React.Component<IFooterProps> {
                     width: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.width / 2,
                     height: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.height,
                 }).then((base64Data) => {
-                    //   const linkSource = base64Data;
-                    //  const downloadLink = document.createElement("a");
-                    //  downloadLink.href = linkSource;
-                    //  downloadLink.download = "test.png";
-                    //   downloadLink.click();
-
-                    // SHOW DIFF IMAGE URL
-                    //     console.log(base64Data);
-                    //
                     Tools.CreateScreenshotUsingRenderTargetAsync(this.props.globalState.currentScene.getEngine(), camScreen2, {
                         width: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.width / 2,
                         height: this.props.globalState.currentScene.getEngine().getRenderingCanvas()!.height,
                     }).then((base64Data2) => {
-                        //  const linkSource = base64Data2;
-                        //  const downloadLink = document.createElement("a");
-                        //  downloadLink.href = linkSource;
-                        //  downloadLink.download = "cam2.png";
-                        //    downloadLink.click();
-                        //
-
                         compareImages(base64Data, base64Data2 ).then((res) => {
-                            //   console.log(res);
-
                             document.getElementById("topInfo")!.style.display = "block";
                             document.getElementById("topInfo")!.innerHTML = res.pm + " pixels mismatch, error " + res.error + "%";
                             setTimeout(() => {
@@ -120,11 +116,9 @@ export class Footer extends React.Component<IFooterProps> {
                             downloadLink.href = res.dataURL;
 
                             downloadLink.download = "dataURL.png";
-                            //    downloadLink.click();
 
                             const screenLayer = new Layer("screenLayer", res.dataURL, this.props.globalState.currentScene, false);
                             screenLayer.layerMask = 0x20000000;
-                            //   console.log(screenLayer);
 
                             this.props.globalState.currentScene.onPointerObservable.addOnce(function () {
                                 setTimeout(() => {
@@ -181,6 +175,9 @@ wireframeMode(){
         this.props.globalState.skybox = true
     }
 }
+
+//
+
 
 //
     defineTextureFormat(option: string) {
@@ -329,12 +326,21 @@ wireframeMode(){
                         onClick={() => this.toggleSkybox()}
                         enabled={!!this.props.globalState.currentScene}
                     />
-                    <FooterButton
+                    <FooterButton // Download GLB
                         globalState={this.props.globalState}
                         icon={iconDownload}
-                        label="Export GLB with WEBP textures"
+                        label="Export Optimized GLB"
                         onClick={() => this.showURL()}
-                        enabled={!!this.props.globalState.currentScene}
+                       // enabled={!!this.props.globalState.currentScene && !this.props.globalState.textureAssetLoaded}
+                       enabled={!!this.props.globalState.currentScene}
+                    />
+                    <FooterButton // Download KTX Image
+                        globalState={this.props.globalState}
+                        icon={iconDownloadKTX}
+                        label="Export KTX2 image"
+                        onClick={() => this.exportKTX()}
+                      //  enabled={!!this.props.globalState.currentScene && this.props.globalState.textureAssetLoaded}
+                      enabled={!!this.props.globalState.textureAssetLoaded}
                     />
 
                     <DropUpButton

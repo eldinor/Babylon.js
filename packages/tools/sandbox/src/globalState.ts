@@ -74,6 +74,9 @@ export class GlobalState {
     public metallic: boolean = false;
     public emissive: boolean = false;
     public occlusion: boolean = false;
+    //
+    public textureAssetLoaded: boolean = false;
+    public textureAssetURL: string;
 
     public showDebugLayer() {
         this.isDebugLayerEnabled = true;

@@ -454,6 +454,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
         // The start of very long IF
         if (!this.textureImageLoaded) {
             //
+           
             //  The beginning of everything :)
             const arr = new Uint8Array(await this._originBlob.arrayBuffer());
 
@@ -513,6 +514,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
 
             this._scene.onDispose = () => {
                 pane.dispose();
+                this.props.globalState.textureAssetLoaded = false;
             };
 
             const f0 = pane.addFolder({
@@ -1143,9 +1145,11 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
     } //
 
     //
-    loadTextureAsset(url: string): Scene {
+    async loadTextureAsset(url: string): Promise<Scene> {
+        this.props.globalState.textureAssetLoaded = true;
         const scene = new Scene(this._engine);
         const plane = CreatePlane("plane", { size: 1 }, scene);
+        const plane2 = CreatePlane("plane2", { size: 1 }, scene);
 
         const texture = new Texture(
             url,
@@ -1154,6 +1158,7 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             undefined,
             Texture.NEAREST_LINEAR,
             () => {
+                // onload
                 const size = texture.getBaseSize();
                 if (size.width > size.height) {
                     plane.scaling.y = size.height / size.width;
@@ -1166,19 +1171,91 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
                 texture.wrapU = Texture.CLAMP_ADDRESSMODE;
                 texture.wrapV = Texture.CLAMP_ADDRESSMODE;
 
-                scene.debugLayer.show();
-                scene.debugLayer.select(texture, "PREVIEW");
+                //    scene.debugLayer.show();
+                //   scene.debugLayer.select(texture, "PREVIEW");
             },
             (message, exception) => {
                 this.props.globalState.onError.notifyObservers({ scene: scene, message: message || exception.message || "Failed to load texture" });
             }
+        );
+        //
+        const assetArrayBuffer = await Tools.LoadFileAsync(url, true);
+        console.log(assetArrayBuffer);
+        const assetBlob = new Blob([assetArrayBuffer]);
+        console.log(assetBlob);
+        // const assetUrl = URL.createObjectURL(assetBlob);
+        //
+        //
+        let imgKTX = await ktx.encodeToKTX2(assetArrayBuffer, {
+            type: 1,
+            enableDebug: false, // TODO: make checkbox
+            generateMipmap: false, // TODO: make checkbox
+            isUASTC: true,
+            qualityLevel: this.props.globalState.qualityLevel, // 1-255
+            compressionLevel: this.props.globalState.compressionLevel, // 0-5
+            //  isSetKTX2SRGBTransferFunc: true, // by default
+            needSupercompression: false, // default false
+            isKTX2File: true,
+        });
+        console.log(imgKTX);
+
+        const ktxBlob = new Blob([imgKTX]);
+        console.log(ktxBlob);
+        const ktxUrl = URL.createObjectURL(ktxBlob);
+        console.log(ktxUrl);
+        this.props.globalState.textureAssetURL = ktxUrl;
+
+        //
+        const texture2 = new Texture(
+            ktxUrl,
+            scene,
+            undefined,
+            undefined,
+            Texture.NEAREST_LINEAR,
+            () => {
+                // onload
+                const size = texture.getBaseSize();
+                if (size.width > size.height) {
+                    plane2.scaling.y = size.height / size.width;
+                } else {
+                    plane2.scaling.x = size.width / size.height;
+                }
+
+                texture2.gammaSpace = true;
+                texture2.hasAlpha = true;
+                texture2.wrapU = Texture.CLAMP_ADDRESSMODE;
+                // texture2.wrapV = Texture.CLAMP_ADDRESSMODE;
+                texture2.vScale = -1;
+
+                //   scene.debugLayer.show();
+                // scene.debugLayer.select(texture, "PREVIEW");
+            },
+            (message, exception) => {
+                this.props.globalState.onError.notifyObservers({ scene: scene, message: message || exception.message || "Failed to load texture #2" });
+            },
+            imgKTX.buffer,
+            false,
+            undefined,
+            "image/ktx2",
+            undefined,
+            undefined,
+            "ktx2"
         );
 
         const material = new PBRMaterial("unlit", scene);
         material.unlit = true;
         material.albedoTexture = texture;
         material.alphaMode = PBRMaterial.PBRMATERIAL_ALPHABLEND;
+        //   material.backFaceCulling = false
         plane.material = material;
+        //
+        const material2 = new PBRMaterial("unlit2", scene);
+        material2.unlit = true;
+        material2.albedoTexture = texture2;
+        material2.alphaMode = PBRMaterial.PBRMATERIAL_ALPHABLEND;
+        //  material2.backFaceCulling = false
+        plane2.material = material2;
+        plane2.layerMask = 0x20000000;
 
         return scene;
     }
