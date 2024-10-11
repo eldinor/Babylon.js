@@ -772,11 +772,10 @@ export class RenderingZone extends React.Component<IRenderingZoneProps> {
             const userKTX = fKTX.addFolder({
                 title: "User Defined KTX2 Compression for Texture Slots",
             });
-            userKTX.disabled = true;
+
             userKTX.expanded = false;
 
             if (this.props.globalState.textureValue == "KTX2/USER") {
-                userKTX.disabled = false;
                 userKTX.expanded = true;
             }
             //
