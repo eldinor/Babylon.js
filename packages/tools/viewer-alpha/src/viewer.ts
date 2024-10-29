@@ -168,6 +168,10 @@ export class Viewer implements IDisposable {
      */
     public readonly onIsAnimationPlayingChanged = new Observable<void>();
 
+    //
+
+    public readonly onClearColorChanged = new Observable<void>();
+
     /**
      * Fired when the current point on the selected animation timeline changes.
      */
@@ -194,6 +198,8 @@ export class Viewer implements IDisposable {
     private _activeAnimationObservers: Observer<AnimationGroup>[] = [];
     private _animationSpeed = 1;
 
+    //   private _clearColor: Color4;
+
     public constructor(
         private readonly _engine: AbstractEngine,
         options?: ViewerOptions
@@ -207,6 +213,7 @@ export class Viewer implements IDisposable {
         this._details.scene.skipFrustumClipping = true;
         this._details.scene.skipPointerMovePicking = true;
         this._details.scene.clearColor = finalOptions.backgroundColor;
+        //   this._clearColor = finalOptions.backgroundColor;
         this._snapshotHelper = new SnapshotRenderingHelper(this._details.scene, { morphTargetsNumMaxInfluences: 30 });
         this._camera = new ArcRotateCamera("camera1", 0, 0, 1, Vector3.Zero(), this._details.scene);
         this._camera.attachControl();
@@ -514,6 +521,7 @@ export class Viewer implements IDisposable {
         this.onAnimationSpeedChanged.clear();
         this.onIsAnimationPlayingChanged.clear();
         this.onAnimationProgressChanged.clear();
+        this.onClearColorChanged.clear();
 
         this._isDisposed = true;
     }

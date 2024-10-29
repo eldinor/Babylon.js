@@ -1,6 +1,6 @@
 // eslint-disable-next-line import/no-internal-modules
 import type { Nullable } from "core/index";
-
+import { Color4 } from "core/index";
 import type { PropertyValues } from "lit";
 import type { ViewerDetails, ViewerHotSpot, ViewerHotSpotQuery } from "./viewer";
 import type { CanvasViewerOptions } from "./viewerFactory";
@@ -28,6 +28,7 @@ interface HTML3DElementEventMap extends HTMLElementEventMap {
     animationspeedchange: Event;
     animationplayingchange: Event;
     animationprogresschange: Event;
+    clearcolorchange: Event;
 }
 
 /**
@@ -223,6 +224,8 @@ export class HTML3DElement extends LitElement {
         return this._viewerDetails;
     }
 
+    defaultClearColor = new Color4(0.1, 0.1, 0.2, 1.0);
+
     /**
      * Get hotspot world and screen values from a named hotspot
      * @param name slot of the hot spot
@@ -266,6 +269,12 @@ export class HTML3DElement extends LitElement {
      */
     @property({ reflect: true })
     public environment: Nullable<string> = null;
+
+    /**
+     * The clearcolor string.
+     */
+    @property({ reflect: true })
+    public clearcolor: Nullable<string> = null;
 
     /**
      * A string value that encodes one or more hotspots.
@@ -383,6 +392,10 @@ export class HTML3DElement extends LitElement {
 
             if (changedProperties.has("environment" satisfies keyof this)) {
                 this._updateEnv();
+            }
+            if (changedProperties.has("clearcolor" satisfies keyof this)) {
+                console.log("CLEAR COLOR!!!!");
+                this._updateClearColor();
             }
         }
     }
@@ -537,10 +550,18 @@ export class HTML3DElement extends LitElement {
                             this._dispatchCustomEvent("animationprogresschange", (type) => new Event(type));
                         });
 
+                        details.viewer.onClearColorChanged.add(() => {
+                            console.log("onClearColorChanged");
+                            console.log(this.clearcolor);
+                            this._updateClearColor();
+                            this._dispatchCustomEvent("clearcolorchange", (type) => new Event(type));
+                        });
+
                         this._updateSelectedAnimation();
                         this._updateAnimationSpeed();
                         this._updateModel();
                         this._updateEnv();
+                        this._updateClearColor();
 
                         this._dispatchCustomEvent("viewerready", (type) => new Event(type));
                     },
@@ -595,6 +616,26 @@ export class HTML3DElement extends LitElement {
                 await this._viewerDetails?.viewer.loadEnvironment(this.environment);
             } else {
                 await this._viewerDetails?.viewer.resetEnvironment();
+            }
+        } catch (error) {
+            Logger.Log(error);
+        }
+    }
+    private async _updateClearColor() {
+        try {
+            if (this.clearcolor) {
+                console.log("EST CC", this.clearcolor);
+                const scene = this._viewerDetails?.scene;
+                if (scene) {
+                    scene.clearColor = Color4.FromHexString(this.clearcolor);
+                    console.log(scene?.clearColor);
+                }
+            } else {
+                console.log("NO CC", this._viewerDetails?.scene.clearColor);
+                const scene = this._viewerDetails?.scene;
+                if (scene) {
+                    scene.clearColor = this.defaultClearColor;
+                }
             }
         } catch (error) {
             Logger.Log(error);
