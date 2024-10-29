@@ -33,6 +33,12 @@
                 right: 10px;
             }
 
+            .toggle-hotspot-button2 {
+                position: absolute;
+                top: 100px;
+                right: 10px;
+            }
+
             .lineContainer {
                 pointer-events: none;
                 display: block;
@@ -69,12 +75,13 @@
             source="https://raw.githubusercontent.com/BabylonJS/Assets/master/meshes/ufo.glb"
             environment="../../../../../public/@babylonjs/viewer-alpha/assets/photoStudio.env"
             animation-speed="1.5"
-            hotspots="testHotSpot1 1 228 113 111 0.217 0.341 0.442"
+            hotspots="testHotSpot1 1 328 113 111 0.317 0.141 0.242 testHotSpot2 1 228 113 111 0.217 0.341 0.442"
         >
             <!-- <div slot="tool-bar" style="position: absolute; top: 12px; left: 12px; width: 100px; height: 36px">
                 <button onclick="document.querySelector('babylon-viewer').toggleAnimation()">Toggle Animation</button>
             </div> -->
             <svg id="lines" style="position: absolute; width: 100%; height: 100%" xmlns="http://www.w3.org/2000/svg" class="lineContainer">
+                <line class="line"></line>
                 <line class="line"></line>
             </svg>
         </babylon-viewer>
@@ -82,11 +89,23 @@
         <button class="toggle-engine-button" onclick="onToggleEngine()">Toggle Engine</button>
 
         <button id="anchor-button" class="toggle-hotspot-button" onclick="onToggleHotSpot()">Toggle Hot Spot</button>
+        <button id="anchor-button2" class="toggle-hotspot-button2" onclick="onToggleHotSpot2()">Toggle Hot Spot2</button>
         <script type="module" src="/packages/tools/viewer-alpha/src/index.ts"></script>
         <script>
             const viewerElement = document.querySelector("babylon-viewer");
             const lines = document.querySelectorAll("line");
+            console.log(lines)
             const hotspotResult = { screenPosition: [0, 0], worldPosition: [0, 0, 0] };
+
+            console.log(viewerElement.attributes.hotspots.value)
+            const hotSpotArray = viewerElement.attributes.hotspots.value.split(/\s+/);
+            console.log(hotSpotArray)
+            const hotspotStates = []
+            for (let offset = 0; offset < hotSpotArray.length; offset += 8) {
+                hotspotStates.push(false)
+            }
+console.log(hotspotStates)
+           
 
             let viewerDetails;
             viewerElement.addEventListener("viewerready", (event) => {
@@ -98,7 +117,10 @@
                 console.log(`Model changed.`, viewerDetails);
             });
             let isViewerConnected = true;
+
+           
             let hotspotVisible = false;
+            let hotspotVisible2 = false;
 
             (async () => {
                 // The module referenced in the script tag above is loaded asynchronously, so we need to wait for it to load and for the custom element to be defined.
@@ -141,6 +163,14 @@
                 }
             };
 
+            const startHotSpotLinesRenderLoop2 = () => {
+                const hotspotBaseRect = document.querySelector("#anchor-button2").getBoundingClientRect();
+                drawHotSpotLine(lines[1], "testHotSpot2", hotspotBaseRect);
+                if (hotspotVisible2) {
+                    requestAnimationFrame(startHotSpotLinesRenderLoop2);
+                }
+            };
+
             function onToggleDOM() {
                 isViewerConnected ? document.body.removeChild(viewerElement) : document.body.appendChild(viewerElement);
                 isViewerConnected = !isViewerConnected;
@@ -153,7 +183,16 @@
             function onToggleHotSpot() {
                 hotspotVisible = !hotspotVisible;
                 lines[0].style.visibility = hotspotVisible ? "visible" : "hidden";
+                lines[1].style.visibility = "hidden"
+                hotspotVisible2 = false
                 startHotSpotLinesRenderLoop();
+            }
+            function onToggleHotSpot2() {
+                hotspotVisible2 = !hotspotVisible2;
+                lines[1].style.visibility = hotspotVisible2 ? "visible" : "hidden";
+                lines[0].style.visibility = "hidden"
+                hotspotVisible = false
+                startHotSpotLinesRenderLoop2();
             }
         </script>
     </body>

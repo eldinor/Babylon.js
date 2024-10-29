@@ -235,10 +235,12 @@ export class HTML3DElement extends LitElement {
         // Iterate through each hotspot to get the 'data-surface' and 'data-name' attributes
         if (this._viewerDetails) {
             const hotspot = this.hotspots?.[name];
+            // console.log(this.hotspots);
             if (hotspot) {
                 resultFound = this._viewerDetails.viewer.getHotSpotToRef(hotspot, result);
             }
         }
+        //  console.log(resultFound);
         return resultFound;
     }
     /**
